@@ -59,7 +59,7 @@ Custom documentation is collected in [Documentation](Documentation/). See the [f
 - `unity_path` support targets regular HDA mesh generation; terrain, curves, PDG and GeoSync are outside this extension's scope.
 - Generated path hierarchies are rebuilt on recook. Manual edits to generated children and material overrides may not persist.
 - The integration is not yet fully opt-in: some instancer processing differs from upstream even when custom attributes are absent.
-- Source syntax and merge checks have been performed. Unity compilation and HDA cook/bake verification have not yet been confirmed for this custom 459 revision.
+- Source syntax and merge checks have been performed. The earlier custom version was reported working in Unity. This restoration preserves that implementation; recheck compilation, cooking and baking after applying it.
 
 This is an independent customization of SideFX's plugin. SideFX's original documentation and attribution follow below.
 
@@ -105,3 +105,4 @@ Currently, the supported Unity versions are:
 1. Copy the Plugins/HoudiniEngineUnity folder from the cloned repository from step 2, and paste it into your Unity project's Assets/Plugins folder. If the Plugins folder exists, you can simply merge with it.
 1. Restart Unity.
 1. Ensure Houdini Engine loaded successfully by going to the "HoudiniEngine" top menu and selecting "Installation Info" and making sure all the versions match.
+

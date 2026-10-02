@@ -45,20 +45,3 @@ Replace these FOUR files from this cumulative package:
 Earlier unity_instance_parent, unity_instance_name, and unity_instance_suffix changes
 are included. Recook after replacing the files.
 
-## Validation
-
-Source reviewed; hierarchy and face-partition algorithm checks run outside
-Unity. No Unity compiler, editor, or Houdini session is available here.
-
-In Unity, verify:
-1. Single sphere_01 path: exact name and no extra groups.
-2. parent/child/sphere_01: mesh at leaf, identity local group transforms.
-3. parent/child/sphere_01 and parent/child/cube_01: shared parent and child.
-4. Merge primitives with different paths: each mesh has only its own faces,
-   correct materials, UVs, colors and normals. Test both mesh generation modes.
-5. Rename/remove paths and remove the attribute, recook, then save/reopen and
-   recook again: no orphan groups, meshes, or duplicate colliders.
-6. Bake new GameObject, prefab, and update an existing bake: inspect nested
-   meshes/materials and confirm the bake survives deletion of the source HDA.
-7. Test collision groups, LOD groups, instanced mesh parts, visibility toggles,
-   and the existing unity_instance attributes in the same asset.

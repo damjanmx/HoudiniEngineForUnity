@@ -2,9 +2,9 @@
 
 ## Changelog and usage documentation
 
-**Documentation date:** 23 September 2026  
-**Scope:** All five implementation stages completed in this project.  
-**Status:** Current implemented behavior; not yet runtime-verified in Unity.
+**Documentation date:** 2 October 2026  
+**Scope:** Custom output features and subsequent fixes, rename and defaults for Houdini 22.0.459.  
+**Status:** Earlier custom version reported working by the user. Reapplication to the clean, compilation-fixed baseline requires a fresh Unity check.
 
 Stage numbers below describe this project's changes; they are not official SideFX release numbers.
 
@@ -13,6 +13,15 @@ Stage numbers below describe this project's changes; they are not official SideF
 ---
 
 ## 1. Cumulative changelog
+
+### Latest updates — 2 October 2026
+
+- Renamed the instance parent attribute to `unity_instance_parent`, with no alias for the previous name.
+- Preserved source tag, layer and individual static flags when `unity_use_instance_flags = 1`, including descendants and bake copies.
+- Set new-instance defaults to Generate Tangents off, Generate Mesh Using Points on, and spline Sampling Resolution 12. Existing serialized values remain unchanged.
+- Rebased custom features on official 22.0.459. The public assembly-enumeration API fix is maintained in the preceding baseline commit.
+- Collected custom documentation under the repository's `Documentation` folder; optional validation files are omitted.
+
 
 ### Stage 1 — Custom prefab-instance parents
 
@@ -293,3 +302,4 @@ Existing root bake-name conventions still apply; custom descendant naming does n
 An HDA using only built-in attributes may therefore behave differently. Removing custom attributes does not revert the plugin source. Returning to stock behavior requires restoring the original plugin, or implementing and validating explicit gating of all changed paths.
 
 **Pending, not implemented:** activate extensions only when the relevant custom attributes exist and preserve the original paths otherwise. No compatibility switch or global opt-in setting currently exists.
+

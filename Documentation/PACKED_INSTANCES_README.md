@@ -53,24 +53,3 @@ Deleting a generated copy does not destroy its shared prototype mesh. Parent
 transforms are identity transforms; the original HAPI instance transforms are
 applied unchanged. Nested generated meshes are included in recursive baking.
 
-## Install and validate
-
-If you installed the immediately preceding attribute-compatibility package,
-replace only:
-
-- Scripts/Asset/HEU_PartData.cs
-- Scripts/Utility/HEU_OutputAttributeScope.cs
-
-For a fresh install, follow ATTRIBUTE_COMPATIBILITY_README.md; all earlier
-changes are included. Rebuild the HDA once after installation.
-
-Optional Unity tests in Validation~/ScopedOutputs cover the shared naming rules,
-packed owner precedence/count validation, and custom-name cleanup without
-shared-mesh destruction. The Unity tests have not been run here. Source checks
-and ZIP verification do not substitute for compilation or an HDA scene test.
-
-In Unity test several Copy to Points instances with mixed names, suffixes and
-parent paths; recook after changing/removing them. Also test primitive/detail
-attributes, multiple source parts, nested packed instances, shared mesh identity,
-nonuniform scales/rotations, per-instance flags and baking. Confirm the original
-unity_instance prefab behavior remains correct in the same project.

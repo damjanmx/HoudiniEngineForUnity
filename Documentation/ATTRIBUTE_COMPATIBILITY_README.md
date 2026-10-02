@@ -105,34 +105,3 @@ Bake code copies flags per node, scoped scripts/stores, and independent collider
 components/meshes. Prefab baking keeps native prefab instantiation and transfers
 instance flags and renderer material overrides.
 
-## Validation and tests
-
-Source integration, delimiters/preprocessor balance, installation manifest and
-ZIP integrity were checked locally. There is no Unity editor, C# compiler, or
-Houdini session in the editing environment. Compilation and runtime behavior
-are NOT verified here.
-
-Focused Unity Editor tests are supplied in Validation~/ScopedOutputs.
-The trailing ~ keeps them out of normal Unity import. To run them, copy that
-folder to Assets/Tests/ScopedOutputs in a project with Unity Test Framework,
-then run EditMode tests. If the project already has an assembly named
-HoudiniEngineUnityEditorTests, add the test .cs to that assembly instead of
-creating a second assembly with the same name.
-
-Integration checklist (requires a cooked HDA):
-
-1. Two mesh paths under one parent: different valid tags/layers/static values,
-   materials, readability, stored data and scripts. Confirm parent/child paths
-   cannot overwrite one another's flags.
-2. Primitive collision-only, rendered, convex, trigger, simple collision and
-   multiple collision groups; inspect each output's geometry and colliders.
-3. Different paths with LOD groups and UV/material variation. Exercise both
-   native mesh generation modes and the collision variants your HDA uses.
-4. Two unity_instance points referencing one prefab, sharing unity_instance_parent but
-   with different names, tags/layers/static, collision assets and materials.
-   Exercise detail defaults and point unity_use_instance_flags=0/1.
-5. Change paths/properties; remove attributes/groups; recook, save/reload and
-   recook again. Check for stale components, duplicate colliders and flag leaks.
-6. Bake new GameObjects/prefabs and update existing bakes. Check components,
-   prefab links, collision meshes, script data/references and stored arrays;
-   delete the source HDA and verify baked output remains valid.

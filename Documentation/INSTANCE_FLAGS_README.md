@@ -8,4 +8,5 @@ When the value is 1, `unity_tag`, `unity_layer` and `unity_static` on the instan
 
 The fix guards both initial creation and the later attribute pass, avoids recursively resetting existing instances during output setup, and preserves individual editor static flag bits when baking.
 
-Regression tests are included in Validation~/ScopedOutputs. Unity execution and HDA cook/bake verification are still required in the target Unity project.
+The optional validation folder is omitted. Verify cooking, repeated cooking and baking in the target Unity project.
+
