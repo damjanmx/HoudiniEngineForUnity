@@ -41,10 +41,10 @@ namespace HoudiniEngineUnity
         {
                 public const int HOUDINI_MAJOR			= 22;
                 public const int HOUDINI_MINOR			= 0;
-                public const int HOUDINI_BUILD			= 457;
+                public const int HOUDINI_BUILD			= 459;
                 public const int HOUDINI_PATCH			= 0;
 
-                public const string HOUDINI_VERSION_STRING = "22.0.457";
+                public const string HOUDINI_VERSION_STRING = "22.0.459";
 
                 public const int HOUDINI_ENGINE_MAJOR	= 9;
                 public const int HOUDINI_ENGINE_MINOR	= 0;
@@ -71,7 +71,7 @@ namespace HoudiniEngineUnity
                 public const string HAPI_LIBRARY_PATH		= HOUDINI_FRAMEWORKS_PATH + "/Libraries";
 
                 public const string HAPI_LIBRARY	= HOUDINI_INSTALL_PATH + HAPI_LIBRARY_PATH + "/libHAPIL.dylib";
-                public const string HARC_LIBRARY        = HOUDINI_INSTALL_PATH + HAPI_LIBRARY_PATH + "/libHARC.dylib";
+                public const string HARC_LIBRARY        = HOUDINI_INSTALL_PATH + HAPI_LIBRARY_PATH + "/libHoudiniHARC.dylib";
 
 #elif UNITY_EDITOR_LINUX || (!UNITY_EDITOR && UNITY_STANDALONE_LINUX)
 
