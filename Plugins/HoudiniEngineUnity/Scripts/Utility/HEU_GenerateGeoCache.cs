@@ -115,7 +115,6 @@ namespace HoudiniEngineUnity
         public float[] _LODTransitionValues;
 
         public bool _isMeshReadWrite = false;
-        internal bool _isUnityPathCache;
 
         // Colliders
         public class HEU_ColliderInfo
@@ -155,43 +154,6 @@ namespace HoudiniEngineUnity
 
         [SerializeField] public HEU_MeshIndexFormat _meshIndexFormat = new HEU_MeshIndexFormat();
 
-
-        /// <summary>
-        /// Filter group membership without renumbering faces or vertices: all attribute and
-        /// material arrays keep their original HAPI indices. Used for unity_path mesh splitting.
-        /// </summary>
-        internal HEU_GenerateGeoCache CreateUnityPathCache(string[] facePaths, string path)
-        {
-            HEU_GenerateGeoCache result = (HEU_GenerateGeoCache)MemberwiseClone();
-            result._isUnityPathCache = true;
-            result._groupSplitVertexIndices = new Dictionary<string, int[]>();
-            result._groupSplitFaceIndices = new Dictionary<string, List<int>>();
-            result._groupVertexOffsets = new Dictionary<string, List<int>>();
-            result._colliderInfos = new List<HEU_ColliderInfo>();
-            result._inUseMaterials = new List<HEU_MaterialData>();
-            result._LODTransitionValues = _LODTransitionValues != null ? (float[])_LODTransitionValues.Clone() : null;
-            foreach (KeyValuePair<string, List<int>> group in _groupSplitFaceIndices)
-            {
-                List<int> faces = new List<int>();
-                List<int> offsets = new List<int>();
-                int[] vertices = new int[_vertexList.Length];
-                for (int i = 0; i < vertices.Length; ++i) vertices[i] = -1;
-                for (int i = 0; i < group.Value.Count; ++i)
-                {
-                    int face = group.Value[i];
-                    if (!System.String.Equals(facePaths[face], path, System.StringComparison.Ordinal)) continue;
-                    int offset = _groupVertexOffsets[group.Key][i];
-                    faces.Add(face);
-                    offsets.Add(offset);
-                    System.Array.Copy(_groupSplitVertexIndices[group.Key], offset, vertices, offset, _faceCounts[face]);
-                }
-                if (faces.Count == 0) continue;
-                result._groupSplitVertexIndices.Add(group.Key, vertices);
-                result._groupSplitFaceIndices.Add(group.Key, faces);
-                result._groupVertexOffsets.Add(group.Key, offsets);
-            }
-            return result;
-        }
 
         //	LOGIC -----------------------------------------------------------------------------------------------------
 
@@ -811,7 +773,7 @@ namespace HoudiniEngineUnity
 
             if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.BOX)
             {
-                BoxCollider collider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<BoxCollider>() : HEU_GeneralUtility.GetOrCreateComponent<BoxCollider>(outputGameObject);
+                BoxCollider collider = HEU_GeneralUtility.GetOrCreateComponent<BoxCollider>(outputGameObject);
                 collider.center = colliderInfo._colliderCenter;
                 collider.size = colliderInfo._colliderSize;
                 collider.isTrigger = colliderInfo._isTrigger;
@@ -820,7 +782,7 @@ namespace HoudiniEngineUnity
             }
             else if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.SPHERE)
             {
-                SphereCollider collider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<SphereCollider>() : HEU_GeneralUtility.GetOrCreateComponent<SphereCollider>(outputGameObject);
+                SphereCollider collider = HEU_GeneralUtility.GetOrCreateComponent<SphereCollider>(outputGameObject);
                 collider.center = colliderInfo._colliderCenter;
                 collider.radius = colliderInfo._colliderRadius;
                 collider.isTrigger = colliderInfo._isTrigger;
@@ -829,7 +791,7 @@ namespace HoudiniEngineUnity
             }
             else if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.SIMPLE_BOX)
             {
-                BoxCollider collider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<BoxCollider>() : HEU_GeneralUtility.GetOrCreateComponent<BoxCollider>(outputGameObject);
+                BoxCollider collider = HEU_GeneralUtility.GetOrCreateComponent<BoxCollider>(outputGameObject);
 
                 Vector3 firstPt = colliderInfo._collisionVertices[0];
                 Bounds bounds = new Bounds(firstPt, Vector3.zero);
@@ -847,7 +809,7 @@ namespace HoudiniEngineUnity
             }
             else if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.SIMPLE_SPHERE)
             {
-                SphereCollider collider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<SphereCollider>() : HEU_GeneralUtility.GetOrCreateComponent<SphereCollider>(outputGameObject);
+                SphereCollider collider = HEU_GeneralUtility.GetOrCreateComponent<SphereCollider>(outputGameObject);
 
                 Vector3 firstPt = colliderInfo._collisionVertices[0];
                 Bounds bounds = new Bounds(firstPt, Vector3.zero);
@@ -868,7 +830,7 @@ namespace HoudiniEngineUnity
             }
             else if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.SIMPLE_CAPSULE)
             {
-                CapsuleCollider collider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<CapsuleCollider>() : HEU_GeneralUtility.GetOrCreateComponent<CapsuleCollider>(outputGameObject);
+                CapsuleCollider collider = HEU_GeneralUtility.GetOrCreateComponent<CapsuleCollider>(outputGameObject);
 
                 Vector3 firstPt = colliderInfo._collisionVertices[0];
                 Bounds bounds = new Bounds(firstPt, Vector3.zero);
@@ -888,7 +850,7 @@ namespace HoudiniEngineUnity
             }
             else if (colliderInfo._colliderType == HEU_ColliderInfo.ColliderType.MESH)
             {
-                MeshCollider meshCollider = geoCache._isUnityPathCache ? outputGameObject.AddComponent<MeshCollider>() : HEU_GeneralUtility.GetOrCreateComponent<MeshCollider>(outputGameObject);
+                MeshCollider meshCollider = HEU_GeneralUtility.GetOrCreateComponent<MeshCollider>(outputGameObject);
 
                 Mesh collisionMesh = new Mesh();
 
@@ -1738,7 +1700,7 @@ namespace HoudiniEngineUnity
                                            groupName.Contains(renderConvexCollisionGroupName);
                 if (bIsCollidable || bIsRenderCollidable)
                 {
-                    if (numCollisionMeshes > 0 && !geoCache._isUnityPathCache)
+                    if (numCollisionMeshes > 0)
                     {
                         // More than one collision mesh should work from my tests...
                         // HEU_Logger.LogWarningFormat("More than 1 collision mesh detected for part {0}.\nOnly a single collision mesh is supported per part.", geoCache._partName);
@@ -2244,7 +2206,7 @@ namespace HoudiniEngineUnity
                                            groupName.Contains(renderConvexCollisionGroupName);
                 if (bIsCollidable || bIsRenderCollidable)
                 {
-                    if (numCollisionMeshes > 0 && !geoCache._isUnityPathCache)
+                    if (numCollisionMeshes > 0)
                     {
                         HEU_Logger.LogWarningFormat(
                             "More than 1 collision mesh detected for part {0}.\nOnly a single collision mesh is supported per part.",

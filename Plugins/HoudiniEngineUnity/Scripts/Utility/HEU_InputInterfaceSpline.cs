@@ -51,7 +51,7 @@ namespace HoudiniEngineUnity
             set => _samplingResolution = value;
         }
 
-        [SerializeField] private float _samplingResolution = 12.0f;
+        [SerializeField] private float _samplingResolution = 25.0f;
     };
 
 #if UNITY_SPLINES_INSTALLED

@@ -636,7 +636,7 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _generateUVs = false;
 
-        [SerializeField] private bool _generateTangents = false;
+        [SerializeField] private bool _generateTangents = true;
 
         [SerializeField] private bool _generateNormals = true;
 
@@ -652,7 +652,7 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _useOutputNodes = true;
 
-        [SerializeField] private bool _generateMeshUsingPoints = true;
+        [SerializeField] private bool _generateMeshUsingPoints = false;
 
         [SerializeField] private bool _useLODGroups = true;
 
