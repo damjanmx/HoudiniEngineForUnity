@@ -277,8 +277,11 @@ namespace HoudiniEngineUnity
                 }
             }
 
-            // Use the public API; CurrentAssemblies is internal in some Unity 6 versions.
+#if UNITY_6000_6_OR_NEWER
+            System.Reflection.Assembly[] assemblies = UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies().ToArray();
+#else
             System.Reflection.Assembly[] assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+#endif
             string assemblyList = "";
             foreach (Assembly assembly in assemblies)
             {
@@ -441,8 +444,11 @@ namespace HoudiniEngineUnity
                 }
             }
 
-            // Use the public API; CurrentAssemblies is internal in some Unity 6 versions.
+#if UNITY_6000_6_OR_NEWER
+            System.Reflection.Assembly[] assemblies = UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies().ToArray();
+#else
             System.Reflection.Assembly[] assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
+#endif
             string assemblyList = "";
             foreach (Assembly assembly in assemblies)
             {
