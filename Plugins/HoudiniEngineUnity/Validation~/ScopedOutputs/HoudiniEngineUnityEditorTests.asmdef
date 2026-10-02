@@ -1,0 +1,6 @@
+{
+  "name": "HoudiniEngineUnityEditorTests",
+  "references": ["HoudiniEngineUnity"],
+  "includePlatforms": ["Editor"],
+  "optionalUnityReferences": ["TestAssemblies"]
+}
