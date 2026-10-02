@@ -2,7 +2,7 @@ Packed-primitive support is described in PACKED_INSTANCES_README.md.
 
 # Custom hierarchies and standard output attributes
 
-This cumulative package includes unity_parent, unity_instance_name,
+This cumulative package includes unity_instance_parent, unity_instance_name,
 unity_instance_suffix, unity_path, and per-output attribute ownership.
 
 ## Install
@@ -62,7 +62,7 @@ Tags and named layers must already exist in Unity's project settings.
 Native scopes and restrictions still apply to features not extended here. This
 patch does not make terrain/input-only attributes into mesh properties, invent
 behavior for arbitrary custom attributes, or add unity_path to PDG/GeoSync.
-For prefabs continue using unity_parent plus unity_instance_name/suffix;
+For prefabs continue using unity_instance_parent plus unity_instance_name/suffix;
 unity_path remains the primitive mesh attribute.
 
 Stored arrays use source element order (ascending selected indices), not Unity's
@@ -93,7 +93,7 @@ else
 
 Set collision-group membership independently on the corresponding primitives.
 For prefab instances, author tag/layer/static/material/collision overrides on
-points alongside unity_instance and unity_parent.
+points alongside unity_instance and unity_instance_parent.
 
 ## Recooking and baking
 
@@ -128,7 +128,7 @@ Integration checklist (requires a cooked HDA):
    multiple collision groups; inspect each output's geometry and colliders.
 3. Different paths with LOD groups and UV/material variation. Exercise both
    native mesh generation modes and the collision variants your HDA uses.
-4. Two unity_instance points referencing one prefab, sharing unity_parent but
+4. Two unity_instance points referencing one prefab, sharing unity_instance_parent but
    with different names, tags/layers/static, collision assets and materials.
    Exercise detail defaults and point unity_use_instance_flags=0/1.
 5. Change paths/properties; remove attributes/groups; recook, save/reload and

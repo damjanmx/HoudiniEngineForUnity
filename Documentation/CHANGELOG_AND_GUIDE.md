@@ -16,7 +16,7 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ### Stage 1 — Custom prefab-instance parents
 
-Added the string point attribute `unity_parent` for instances created using `unity_instance`.
+Added the string point attribute `unity_instance_parent` for instances created using `unity_instance`.
 
 - A value such as `parent_A` creates/reuses an empty parent GameObject.
 - A value such as `parent_A/parent_B` creates/reuses both hierarchy levels.
@@ -25,7 +25,7 @@ Added the string point attribute `unity_parent` for instances created using `uni
 - Parent transforms are created with zero position, identity rotation, and unit scale.
 - Generated parent ownership is recorded for cleanup after recooking and editor reloads.
 - The bake traversal was extended to handle nested generated parents and prefab instances.
-- A valid `unity_parent` attribute takes precedence over `unity_split_attr`.
+- A valid `unity_instance_parent` attribute takes precedence over `unity_split_attr`.
 
 ### Stage 2 — Instance names and suffixes
 
@@ -73,7 +73,7 @@ These changes preserve the existing generators' supported features and restricti
 
 ### Stage 5 — Packed-primitive instances
 
-Extended `unity_parent`, `unity_instance_name`, and `unity_instance_suffix` to packed-primitive instances.
+Extended `unity_instance_parent`, `unity_instance_name`, and `unity_instance_suffix` to packed-primitive instances.
 
 - Added point → primitive → detail lookup on packed instancer parts.
 - Indexed values by instance transform, not by prototype-part index.
@@ -83,7 +83,7 @@ Extended `unity_parent`, `unity_instance_name`, and `unity_instance_suffix` to p
 - Cleanup destroys the generated copies without destroying shared prototype meshes.
 - Added packed-instance scopes for tags, layers, static flags, scripts, and stored attributes.
 - Extended recursive baking for packed output trees.
-- Added `unity_split_attr` fallback grouping when `unity_parent` is absent.
+- Added `unity_split_attr` fallback grouping when `unity_instance_parent` is absent.
 
 Packed instances continue to obtain material and collision geometry from their prototypes. Prefab-style material replacement and collision-asset replacement were not added to packed primitives.
 
@@ -99,17 +99,17 @@ All four custom attributes are **scalar strings**. They are geometry attributes,
 
 | Attribute | `unity_instance` prefabs | Packed instances | Ordinary generated meshes |
 |---|---|---|---|
-| `unity_parent` | Point | Point → primitive → detail | Not used for mesh-path generation. |
+| `unity_instance_parent` | Point | Point → primitive → detail | Not used for mesh-path generation. |
 | `unity_instance_name` | Point | Point → primitive → detail | Not used for mesh-path generation. |
 | `unity_instance_suffix` | Point | Point → primitive → detail | Not used for mesh-path generation. |
 | `unity_path` | Not a prefab hierarchy attribute. | Does not replace the packed-instance naming attributes; may organize a generated mesh prototype. | Primitive |
 
 The arrows indicate owner lookup order, not attribute promotion. In particular, the three custom **prefab** attributes remain point-only; their packed equivalents additionally accept primitive and detail ownership.
 
-### `unity_parent`
+### `unity_instance_parent`
 
 ```c
-s@unity_parent = "environment/vegetation/trees";
+s@unity_instance_parent = "environment/vegetation/trees";
 ```
 
 The instance is placed under `environment → vegetation → trees`, beneath its generated instancer output.
@@ -151,7 +151,7 @@ This produces `parent → child → sphere_01`, with the mesh on `sphere_01`. A 
 | Empty values mixed with nonempty paths | Empty-path geometry remains on the normal output object; other geometry uses its paths. |
 | Missing, invalid, or entirely empty attribute | Normal mesh generation is used. This does not disable unrelated patch behavior. |
 
-Paths share the same slash normalization and case sensitivity as `unity_parent`. Primitives sharing a path are combined, even if they are disconnected. A path node can itself contain geometry as well as child paths. Avoid using a generated LOD child name, such as `lod0`, as a separate path child of the same LOD-owning node.
+Paths share the same slash normalization and case sensitivity as `unity_instance_parent`. Primitives sharing a path are combined, even if they are disconnected. A path node can itself contain geometry as well as child paths. Avoid using a generated LOD child name, such as `lod0`, as a separate path child of the same LOD-owning node.
 
 ---
 
@@ -163,7 +163,7 @@ Use alongside the existing `unity_instance` setup:
 
 ```c
 s@unity_instance = "Assets/Prefabs/Tree.prefab";
-s@unity_parent = "environment/trees";
+s@unity_instance_parent = "environment/trees";
 s@unity_instance_name = sprintf("tree_%03d", @ptnum);
 s@unity_instance_suffix = "_summer";
 ```
@@ -173,7 +173,7 @@ Point zero generates `tree_000_summer` under `environment/trees`. The example pr
 ### Packed instances — Point Wrangle on the packed output
 
 ```c
-s@unity_parent = "environment/rocks";
+s@unity_instance_parent = "environment/rocks";
 s@unity_instance_name = sprintf("rock_%03d", @ptnum);
 s@unity_instance_suffix = "_large";
 ```

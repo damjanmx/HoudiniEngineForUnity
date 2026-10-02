@@ -8,7 +8,7 @@ These attributes control the names and hierarchy of generated Unity GameObjects.
 
 | Attribute | Where to author it | Result |
 | --- | --- | --- |
-| `unity_parent` | Prefab instancer points; packed instance points, primitives or detail | Creates a parent hierarchy relative to the instancer output. `vegetation/trees` places the instance under `trees`, beneath `vegetation`. |
+| `unity_instance_parent` | Prefab instancer points; packed instance points, primitives or detail | Creates a parent hierarchy relative to the instancer output. `vegetation/trees` places the instance under `trees`, beneath `vegetation`. |
 | `unity_instance_name` | Prefab instancer points; packed instance points, primitives or detail | Sets the instance root's name. |
 | `unity_instance_suffix` | Prefab instancer points; packed instance points, primitives or detail | Appends text verbatim to the source prefab/prototype name, or to `unity_instance_name` when both are supplied. |
 | `unity_path` | Mesh primitives | Splits generated mesh output by path and sets its hierarchy. `parent/child/sphere_01` creates a mesh object named `sphere_01` under `child`, beneath `parent`. |
@@ -16,7 +16,7 @@ These attributes control the names and hierarchy of generated Unity GameObjects.
 For prefab instances, use a Point Wrangle on the instancer points:
 
 ```c
-s@unity_parent = "vegetation/trees";
+s@unity_instance_parent = "vegetation/trees";
 s@unity_instance_name = sprintf("tree_%03d", @ptnum);
 s@unity_instance_suffix = "_summer";
 i@unity_use_instance_flags = 1;

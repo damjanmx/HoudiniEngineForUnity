@@ -864,7 +864,7 @@ namespace HoudiniEngineUnity
 
             string[] instanceNames = GetUnityInstanceStrings(session, HEU_Defines.UNITY_INSTANCE_NAME_ATTR, partInfo.instanceCount, true);
             string[] instanceSuffixes = GetUnityInstanceStrings(session, HEU_Defines.UNITY_INSTANCE_SUFFIX_ATTR, partInfo.instanceCount, true);
-            string[] parentPaths = GetUnityInstanceStrings(session, HEU_Defines.UNITY_PARENT_ATTR, partInfo.instanceCount, true);
+            string[] parentPaths = GetUnityInstanceStrings(session, HEU_Defines.UNITY_INSTANCE_PARENT_ATTR, partInfo.instanceCount, true);
             Transform[] instanceParents = null;
             if (parentPaths != null)
                 ComposeUnityParentHierarchy(partTransform, parentPaths, ref instanceParents);
@@ -1264,7 +1264,7 @@ namespace HoudiniEngineUnity
             Transform partTransform = OutputGameObject.transform;
 
             Transform[] instanceToChildTransform = null;
-            // An explicitly supplied unity_parent hierarchy takes precedence over unity_split_attr.
+            // An explicitly supplied unity_instance_parent hierarchy takes precedence over unity_split_attr.
             bool bUseSplitAttr = ComposeUnityParentHierarchy(session, partTransform, numInstances, ref instanceToChildTransform);
             if (!bUseSplitAttr)
             {
@@ -3018,7 +3018,7 @@ namespace HoudiniEngineUnity
         private bool ComposeUnityParentHierarchy(HEU_SessionBase session, Transform root, int numInstances,
             ref Transform[] instanceParents)
         {
-            string[] paths = GetUnityInstancePointStrings(session, HEU_Defines.UNITY_PARENT_ATTR, numInstances);
+            string[] paths = GetUnityInstancePointStrings(session, HEU_Defines.UNITY_INSTANCE_PARENT_ATTR, numInstances);
             if (paths == null) return false;
             return ComposeUnityParentHierarchy(root, paths, ref instanceParents);
         }

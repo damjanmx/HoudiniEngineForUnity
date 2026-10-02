@@ -2,7 +2,7 @@ For the latest cumulative installation list and attribute rules, see ATTRIBUTE_C
 
 For the current cumulative installation list, see UNITY_PATH_README.md.
 
-# unity_parent: custom prefab instance hierarchy
+# unity_instance_parent: custom prefab instance hierarchy
 
 For the supplied Houdini Engine for Unity v2 source (Houdini 22.0.429).
 
@@ -17,10 +17,10 @@ The archive also includes the rest of the original plugin, unchanged. Do not ins
 
 ## Houdini setup
 
-On the same output points that have unity_instance, create a single string point attribute named unity_parent. In a Point Wrangle:
+On the same output points that have unity_instance, create a single string point attribute named unity_instance_parent. In a Point Wrangle:
 
 ```c
-s@unity_parent = "parent_A/parent_B";
+s@unity_instance_parent = "parent_A/parent_B";
 ```
 
 Each point can have a different value. Paths are relative to the generated part/output GameObject, not the scene root or HDA root. The plugin's existing output containers remain. Matching paths share empty GameObjects within that output; separate outputs do not merge their groups.
@@ -36,7 +36,7 @@ Examples:
 
 Names are case-sensitive. Leading, trailing, and repeated slashes are ignored. Other characters, including spaces and dots, are literal names; paths never traverse to existing scene objects. A slash is always a separator.
 
-When a valid unity_parent attribute exists, it takes precedence over unity_split_attr for the whole output, including points whose path is empty. If absent or invalid, the existing hierarchy behavior is used. Only string point attributes of tuple size 1 are supported.
+When a valid unity_instance_parent attribute exists, it takes precedence over unity_split_attr for the whole output, including points whose path is empty. If absent or invalid, the existing hierarchy behavior is used. Only string point attributes of tuple size 1 are supported.
 
 Generated groups use identity local transforms so point positions, rotations, and scales retain their existing meaning. They inherit the output's flags. Prefab creation and instance flag behavior use the original code. Generated groups are managed output: recooking removes and recreates them, including any manual children placed inside them.
 
@@ -52,10 +52,10 @@ Reviewed the patch against the original archive and checked the called API signa
 
 1. Create points with paths parent_A, parent_A/parent_B (twice), parent_A/parent_C, other/parent_B, and an empty string. Expect shared parents and distinct parent_B groups beneath different ancestors.
 2. Confirm prefab connections and identical world transforms versus the original flat output; include rotated and nonuniformly scaled HDA roots and points with orient/pscale/scale.
-3. Recook unchanged, then change paths and remove points. Verify no duplicate groups or stale branches. Remove unity_parent entirely and verify the original layout returns.
+3. Recook unchanged, then change paths and remove points. Verify no duplicate groups or stale branches. Remove unity_instance_parent entirely and verify the original layout returns.
 4. Save/reopen the scene or trigger script recompilation, then recook to verify serialized cleanup ownership.
 5. Bake to a new GameObject and prefab, then update an existing bake after moving points between paths. Verify nested groups, connected prefab roots, and removal of stale groups.
-6. Test missing unity_parent and unity_split_attr alone for unchanged behavior. Test both together for unity_parent precedence.
+6. Test missing unity_instance_parent and unity_split_attr alone for unchanged behavior. Test both together for unity_instance_parent precedence.
 7. Verify prefab LODs, colliders, materials, and unity_use_instance_flags behave as before.
 
 
@@ -74,7 +74,7 @@ String point attributes on the same points as `unity_instance`:
 
 Example (Point Wrangle):
 ```c
-s@unity_parent = "parent_A/parent_B";
+s@unity_instance_parent = "parent_A/parent_B";
 s@unity_instance_name = "Oak";
 s@unity_instance_suffix = "_large";
 ```
@@ -82,7 +82,7 @@ Result: `parent_A/parent_B/Oak_large`.
 With an empty name and a prefab named `Tree`, the result is `Tree_large`.
 
 Install: replace Scripts/Asset/HEU_PartData.cs and Scripts/Core/HEU_Defines.cs,
-then recook. This package includes the previous unity_parent implementation.
+then recook. This package includes the previous unity_instance_parent implementation.
 
 Unity checks: test name-only, suffix-only, both, empty strings, and different
 values on different points. Recook with changed values; bake nested groups and

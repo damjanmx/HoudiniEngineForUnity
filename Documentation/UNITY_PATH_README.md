@@ -42,7 +42,7 @@ Replace these FOUR files from this cumulative package:
 - Scripts/Core/HEU_Defines.cs
 - Scripts/Utility/HEU_GenerateGeoCache.cs
 
-Earlier unity_parent, unity_instance_name, and unity_instance_suffix changes
+Earlier unity_instance_parent, unity_instance_name, and unity_instance_suffix changes
 are included. Recook after replacing the files.
 
 ## Validation

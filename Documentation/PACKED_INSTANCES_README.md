@@ -1,12 +1,12 @@
 # Packed primitive instances
 
-unity_parent, unity_instance_name and unity_instance_suffix now also apply to
+unity_instance_parent, unity_instance_name and unity_instance_suffix now also apply to
 packed primitive instances generated through GeneratePartInstances.
 
 Example on the packed output points (Point Wrangle after Copy to Points):
 
 ```c
-s@unity_parent = "vegetation/trees";
+s@unity_instance_parent = "vegetation/trees";
 s@unity_instance_name = sprintf("tree_%03d", @ptnum);
 s@unity_instance_suffix = "_summer";
 ```
@@ -27,8 +27,8 @@ not solely on polygons inside the packed source geometry.
 - Name only: exact custom name. Suffix only: source prototype GameObject name +
   suffix. Both: custom name + suffix. Both empty: existing plugin naming.
 - No separator or uniqueness counter is appended to custom names.
-- Empty unity_parent leaves the instance directly under its instancer output.
-- When unity_parent is absent, unity_split_attr can supply the grouping.
+- Empty unity_instance_parent leaves the instance directly under its instancer output.
+- When unity_instance_parent is absent, unity_split_attr can supply the grouping.
 - Attributes are indexed by transform, not by prototype part. If one packed
   source contains several exported parts, the plugin still emits each part's
   copy; the same transform's attributes apply to each copy. An exact custom name
