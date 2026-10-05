@@ -830,7 +830,23 @@ namespace HoudiniEngineUnity
 
                     using (var hs2 = new EditorGUILayout.VerticalScope(_mainBoxStyle))
                     {
-                        if (GUILayout.Button(_bakeandreplaceContent, _mainCentredButtonStyle))
+                        bool updateBakePressed;
+                        using (var row = new EditorGUILayout.HorizontalScope())
+                        {
+                            updateBakePressed = GUILayout.Button(_bakeandreplaceContent, _mainCentredButtonStyle);
+                            SerializedProperty deleteBakedData = assetObject.FindProperty("_bakeUpdateDeleteAllBakedData");
+                            EditorGUI.BeginChangeCheck();
+                            bool deleteAll = GUILayout.Toggle(deleteBakedData.boolValue,
+                                new GUIContent("Delete all baked data",
+                                    "Prefab targets only. On: delete baked resource folders before baking. Off: overwrite matching files and keep all other files."),
+                                GUILayout.Width(170));
+                            if (EditorGUI.EndChangeCheck())
+                            {
+                                deleteBakedData.boolValue = deleteAll;
+                                assetObject.ApplyModifiedProperties();
+                            }
+                        }
+                        if (updateBakePressed)
                         {
                             if (assetRoot._bakeTargets == null || assetRoot._bakeTargets.Count == 0)
                             {

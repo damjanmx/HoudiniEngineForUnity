@@ -47,6 +47,35 @@ namespace HoudiniEngineUnity
     /// </summary>
     public static class HEU_AssetDatabase
     {
+        // Limited to a synchronous prefab update; dispose restores any enclosing context.
+        private static string _prefabBakeOverwriteRoot;
+
+        internal static System.IDisposable BeginPrefabBakeOverwrite(string folder)
+        {
+            return new PrefabBakeOverwriteScope(folder);
+        }
+
+        private sealed class PrefabBakeOverwriteScope : System.IDisposable
+        {
+            private readonly string _previous;
+            public PrefabBakeOverwriteScope(string folder)
+            {
+                _previous = _prefabBakeOverwriteRoot;
+                _prefabBakeOverwriteRoot = string.IsNullOrEmpty(folder) ? null
+                    : Path.GetFullPath(folder).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        + Path.DirectorySeparatorChar;
+            }
+            public void Dispose() { _prefabBakeOverwriteRoot = _previous; }
+        }
+
+        private static bool IsPrefabBakeOverwritePath(string path)
+        {
+            return _prefabBakeOverwriteRoot != null && !string.IsNullOrEmpty(path)
+                && Path.GetFullPath(path).StartsWith(_prefabBakeOverwriteRoot,
+                    Application.platform == RuntimePlatform.WindowsEditor
+                        ? System.StringComparison.OrdinalIgnoreCase : System.StringComparison.Ordinal);
+        }
+
         public static string GetAssetCachePath()
         {
 #if UNITY_EDITOR
@@ -491,7 +520,8 @@ namespace HoudiniEngineUnity
 #if UNITY_EDITOR
             if (!string.IsNullOrEmpty(assetCacheFolderPath))
             {
-                AssetDatabase.DeleteAsset(assetCacheFolderPath);
+                if (!IsPrefabBakeOverwritePath(assetCacheFolderPath))
+                    AssetDatabase.DeleteAsset(assetCacheFolderPath);
             }
 #else
 			// TODO RUNTIME: AssetDatabase is not supported at runtime. Do we need to support this for runtime?
@@ -509,7 +539,8 @@ namespace HoudiniEngineUnity
             string assetPath = AssetDatabase.GetAssetPath(asset);
             if (!string.IsNullOrEmpty(assetPath))
             {
-                AssetDatabase.DeleteAsset(assetPath);
+                if (!IsPrefabBakeOverwritePath(assetPath))
+                    AssetDatabase.DeleteAsset(assetPath);
             }
 #else
 			// TODO RUNTIME: AssetDatabase is not supported at runtime. Do we need to support this for runtime?
@@ -526,7 +557,8 @@ namespace HoudiniEngineUnity
 #if UNITY_EDITOR
             if (!string.IsNullOrEmpty(path))
             {
-                AssetDatabase.DeleteAsset(path);
+                if (!IsPrefabBakeOverwritePath(path))
+                    AssetDatabase.DeleteAsset(path);
             }
 #else
 	    // TODO RUNTIME: AssetDatabase is not supported at runtime. Do we need to support this for runtime?
@@ -540,7 +572,8 @@ namespace HoudiniEngineUnity
             string assetPath = GetAssetPath(asset);
             if (HEU_AssetDatabase.IsPathInAssetCacheBakedFolder(assetPath))
             {
-                AssetDatabase.DeleteAsset(assetPath);
+                if (!IsPrefabBakeOverwritePath(assetPath))
+                    AssetDatabase.DeleteAsset(assetPath);
             }
 #else
 	    // TODO RUNTIME: AssetDatabase is not supported at runtime. Do we need to support this for runtime?
@@ -567,6 +600,26 @@ namespace HoudiniEngineUnity
         public static bool CopyAsset(string path, string newPath)
         {
 #if UNITY_EDITOR
+            if (IsPrefabBakeOverwritePath(newPath) && File.Exists(newPath))
+            {
+                // CopyAsset does not reliably replace an occupied destination. Replace only
+                // the asset contents, leaving its .meta file and neighboring assets intact.
+                var comparison = Application.platform == RuntimePlatform.WindowsEditor
+                    ? System.StringComparison.OrdinalIgnoreCase : System.StringComparison.Ordinal;
+                if (string.Equals(Path.GetFullPath(path), Path.GetFullPath(newPath), comparison))
+                    return true;
+                try
+                {
+                    File.Copy(path, newPath, true);
+                    AssetDatabase.ImportAsset(newPath, ImportAssetOptions.ForceUpdate);
+                    return true;
+                }
+                catch (System.Exception exception)
+                {
+                    HEU_Logger.LogErrorFormat("Unable to overwrite baked asset {0}: {1}", newPath, exception.Message);
+                    throw;
+                }
+            }
             return AssetDatabase.CopyAsset(path, newPath);
 #else
 	    // TODO RUNTIME: AssetDatabase is not supported at runtime. Do we need to support this for runtime?
@@ -630,7 +683,7 @@ namespace HoudiniEngineUnity
                 string fileName = HEU_Platform.GetFileName(srcAssetPath);
                 string newAssetPath = HEU_Platform.BuildPath(copyAssetFullPath, fileName);
 
-                if ((!bOverwriteExisting && HEU_Platform.DoesFileExist(newAssetPath)) ||
+                if ((!bOverwriteExisting && !IsPrefabBakeOverwritePath(newAssetPath) && HEU_Platform.DoesFileExist(newAssetPath)) ||
                     CopyAsset(srcAssetPath, newAssetPath))
                 {
                     // Refresh database as otherwise we won't be able to load it in the next line.
@@ -700,7 +753,7 @@ namespace HoudiniEngineUnity
                 string fileName = HEU_Platform.GetFileName(srcAssetPath);
                 string fullCopyPath = HEU_Platform.BuildPath(copyPath, fileName);
 
-                if ((!bOverwriteExisting && HEU_Platform.DoesFileExist(fullCopyPath)) ||
+                if ((!bOverwriteExisting && !IsPrefabBakeOverwritePath(fullCopyPath) && HEU_Platform.DoesFileExist(fullCopyPath)) ||
                     CopyAsset(srcAssetPath, fullCopyPath))
                 {
                     // Refresh database as otherwise we won't be able to load it in the next line.
@@ -789,7 +842,7 @@ namespace HoudiniEngineUnity
                 string fileName = HEU_Platform.GetFileName(srcAssetPath);
                 string fullCopyPath = HEU_Platform.BuildPath(copyPath, fileName);
 
-                if (HEU_Platform.DoesFileExist(fullCopyPath))
+                if (HEU_Platform.DoesFileExist(fullCopyPath) && !IsPrefabBakeOverwritePath(fullCopyPath))
                 {
                     fullCopyPath = GetUniqueAssetPath(fullCopyPath);
                     if (HEU_Platform.DoesFileExist(fullCopyPath))
@@ -877,7 +930,7 @@ namespace HoudiniEngineUnity
             // Add file name
             string finalAssetPath = HEU_Platform.BuildPath(subFolderPath, cleanFilename);
 
-            if (HEU_Platform.DoesFileExist(finalAssetPath) && !bOverwriteExisting)
+            if (HEU_Platform.DoesFileExist(finalAssetPath) && !bOverwriteExisting && !IsPrefabBakeOverwritePath(finalAssetPath))
             {
                 finalAssetPath = AssetDatabase.GenerateUniqueAssetPath(finalAssetPath);
             }

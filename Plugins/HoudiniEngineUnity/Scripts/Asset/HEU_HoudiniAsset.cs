@@ -664,6 +664,8 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _bakeUpdateKeepPreviousTransformValues = false;
 
+        [SerializeField] private bool _bakeUpdateDeleteAllBakedData = false;
+
 
         // If false, pauses all cooking on this HDA until set back to true. Meant for unit testing use.
        private bool _pauseCooking = false;
@@ -1078,6 +1080,17 @@ namespace HoudiniEngineUnity
         /// <inheritdoc />
         public bool BakeToExistingPrefab(GameObject bakeTargetGO)
         {
+            string targetPath = bakeTargetGO != null ? HEU_AssetDatabase.GetAssetPath(bakeTargetGO) : null;
+            string targetFolder = !string.IsNullOrEmpty(targetPath) ? HEU_Platform.GetFolderPath(targetPath) : null;
+            using (HEU_AssetDatabase.BeginPrefabBakeOverwrite(
+                _bakeUpdateDeleteAllBakedData ? null : targetFolder))
+            {
+                return BakeToExistingPrefabInternal(bakeTargetGO);
+            }
+        }
+
+        private bool BakeToExistingPrefabInternal(GameObject bakeTargetGO)
+        {
             if (!HEU_EditorUtility.IsPrefabAsset(bakeTargetGO))
             {
                 HEU_Logger.LogErrorFormat("Unable to bake to existing prefab as specified object is not a prefab asset!");
@@ -1095,20 +1108,22 @@ namespace HoudiniEngineUnity
                 _preAssetEvent.Invoke(new HEU_PreAssetEventData(this, HEU_AssetEventType.BAKE_UPDATE));
             }
 
-            // Since the prefab would have persistent files on disk, we'll need to get
-            // the existing prefab's asset folder, and delete relevant subfolders
-            // such as: Materials, Textures, Meshes
+            // Locate the existing bake folder. Full cleanup is an explicit opt-in;
+            // otherwise matching outputs are overwritten and other files are retained.
             string existingPrefabFolder = HEU_AssetDatabase.GetAssetPath(bakeTargetGO);
             if (!string.IsNullOrEmpty(existingPrefabFolder))
             {
                 existingPrefabFolder = HEU_Platform.GetFolderPath(existingPrefabFolder);
                 existingPrefabFolder = HEU_Platform.TrimLastDirectorySeparator(existingPrefabFolder);
 
-                string[] subFolders = HEU_AssetDatabase.GetAssetSubFolders();
-                foreach (string subfolder in subFolders)
+                if (_bakeUpdateDeleteAllBakedData)
                 {
-                    string folderPath = HEU_Platform.BuildPath(existingPrefabFolder, subfolder);
-                    HEU_AssetDatabase.DeleteAssetCacheFolder(folderPath);
+                    string[] subFolders = HEU_AssetDatabase.GetAssetSubFolders();
+                    foreach (string subfolder in subFolders)
+                    {
+                        string folderPath = HEU_Platform.BuildPath(existingPrefabFolder, subfolder);
+                        HEU_AssetDatabase.DeleteAssetCacheFolder(folderPath);
+                    }
                 }
             }
 
