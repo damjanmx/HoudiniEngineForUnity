@@ -830,23 +830,7 @@ namespace HoudiniEngineUnity
 
                     using (var hs2 = new EditorGUILayout.VerticalScope(_mainBoxStyle))
                     {
-                        bool updateBakePressed;
-                        using (var row = new EditorGUILayout.HorizontalScope())
-                        {
-                            updateBakePressed = GUILayout.Button(_bakeandreplaceContent, _mainCentredButtonStyle);
-                            SerializedProperty deleteBakedData = assetObject.FindProperty("_bakeUpdateDeleteAllBakedData");
-                            EditorGUI.BeginChangeCheck();
-                            bool deleteAll = GUILayout.Toggle(deleteBakedData.boolValue,
-                                new GUIContent("Delete all baked data",
-                                    "Prefab targets only. On: delete baked resource folders before baking. Off: overwrite matching files and keep all other files."),
-                                GUILayout.Width(170));
-                            if (EditorGUI.EndChangeCheck())
-                            {
-                                deleteBakedData.boolValue = deleteAll;
-                                assetObject.ApplyModifiedProperties();
-                            }
-                        }
-                        if (updateBakePressed)
+                        if (GUILayout.Button(_bakeandreplaceContent, _mainCentredButtonStyle))
                         {
                             if (assetRoot._bakeTargets == null || assetRoot._bakeTargets.Count == 0)
                             {
@@ -895,6 +879,9 @@ namespace HoudiniEngineUnity
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeUpdateKeepPreviousTransformValues",
                             "Keep Previous Transform Values",
                             "Copy previous transform values when doing a Bake Update.");
+                        HEU_EditorUI.DrawPropertyField(assetObject, "_bakeUpdateDeleteAllBakedData",
+                            "Delete all baked data",
+                            "Prefab targets only. On: delete baked resource folders before baking. Off: overwrite matching files and keep all other files.");
                         HEU_EditorUI.EndSimpleSection();
                     }
                 }

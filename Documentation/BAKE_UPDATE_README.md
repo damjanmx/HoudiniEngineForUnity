@@ -1,6 +1,6 @@
 # Update Prefab: Delete all baked data
 
-The **Delete all baked data** toggle sits next to the Bake Update button and defaults to **off**, including on existing HDAs that do not yet store the setting. The choice is saved per HDA; it does not automatically reset after a click.
+The **Delete all baked data** toggle sits directly below **Keep Previous Transform Values** in the Bake Update section and defaults to **off**, including on existing HDAs that do not yet store the setting. The choice is saved per HDA; it does not automatically reset after a click.
 
 | Toggle | Behavior |
 | --- | --- |
