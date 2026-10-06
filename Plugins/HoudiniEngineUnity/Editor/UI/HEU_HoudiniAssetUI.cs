@@ -880,7 +880,7 @@ namespace HoudiniEngineUnity
                             "Keep Previous Transform Values",
                             "Copy previous transform values when doing a Bake Update.");
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeUpdateDeleteAllBakedData",
-                            "Delete all baked data",
+                            "Delete All Baked Data",
                             "Prefab targets only. On: delete baked resource folders before baking. Off: overwrite matching files and keep all other files.");
                         HEU_EditorUI.EndSimpleSection();
                     }
