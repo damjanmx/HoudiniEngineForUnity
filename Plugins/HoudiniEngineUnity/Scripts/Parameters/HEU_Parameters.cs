@@ -2559,6 +2559,95 @@ namespace HoudiniEngineUnity
             return _parameterModifiers.Count > 0;
         }
 
+        // Resolve fresh parameter IDs after insertion; cached IDs/indices can have shifted.
+        private bool ReadAssetDropParameters(HEU_SessionBase session, out HAPI_ParmInfo[] infos)
+        {
+            HAPI_NodeInfo nodeInfo = new HAPI_NodeInfo();
+            infos = null;
+            if (!session.GetNodeInfo(_nodeID, ref nodeInfo)) return false;
+            infos = new HAPI_ParmInfo[nodeInfo.parmCount];
+            return HEU_GeneralUtility.GetArray1Arg(_nodeID, session.GetParams, infos, 0, infos.Length);
+        }
+
+        private bool FindAssetDropField(HEU_SessionBase session, HAPI_ParmInfo[] infos,
+            int multiparmID, int instanceIndex, out int fieldID)
+        {
+            fieldID = -1;
+            Dictionary<int, HAPI_ParmInfo> byID = new Dictionary<int, HAPI_ParmInfo>();
+            foreach (HAPI_ParmInfo info in infos) byID[info.id] = info;
+            foreach (HAPI_ParmInfo info in infos)
+            {
+                if (info.type != HAPI_ParmType.HAPI_PARMTYPE_STRING || info.size != 1
+                    || info.choiceCount != 0 || info.tagCount == 0) continue;
+                HAPI_ParmInfo owner = info;
+                bool belongs = true;
+                while (owner.parentId != multiparmID)
+                {
+                    HAPI_ParmInfo parent;
+                    if (!byID.TryGetValue(owner.parentId, out parent)
+                        || parent.type == HAPI_ParmType.HAPI_PARMTYPE_MULTIPARMLIST)
+                    {
+                        belongs = false;
+                        break;
+                    }
+                    owner = parent;
+                }
+                if (!belongs || owner.instanceNum != instanceIndex) continue;
+                bool hasTag = false;
+                if (!session.ParmHasTag(_nodeID, info.id, "heuassetpath", ref hasTag)) return false;
+                if (!hasTag) continue;
+                if (fieldID >= 0 || info.disabled || info.invisible) return false;
+                fieldID = info.id;
+            }
+            return fieldID >= 0;
+        }
+
+        private void ProcessAssetDrop(HEU_SessionBase session, HEU_ParameterData parameter,
+            HEU_ParameterModifier modifier)
+        {
+            // Preserve pending edits to existing entries before changing the parameter layout.
+            if (!UploadValuesToHoudini(session, ParentAsset))
+            {
+                HEU_Logger.LogWarning("Unable to upload existing values; asset drop was cancelled.");
+                return;
+            }
+            int inserted = 0;
+            bool complete = false;
+            try
+            {
+                // Probe one new entry first, including when the list was initially empty.
+                for (int i = 0; i < modifier.AssetPaths.Length; ++i)
+                {
+                    int index = modifier.InstanceIndex + i;
+                    if (!session.InsertMultiparmInstance(_nodeID, parameter._parmInfo.id, index)) return;
+                    ++inserted;
+                    HAPI_ParmInfo[] infos;
+                    int fieldID;
+                    if (!ReadAssetDropParameters(session, out infos)
+                        || !FindAssetDropField(session, infos, parameter._parmInfo.id, index, out fieldID)
+                        || !session.SetParamStringValue(_nodeID, modifier.AssetPaths[i], fieldID, 0)) return;
+                }
+                complete = true;
+            }
+            finally
+            {
+                if (!complete)
+                {
+                    // Roll back only this batch, leaving existing entries intact.
+                    bool rolledBack = true;
+                    for (int i = inserted - 1; i >= 0; --i)
+                    {
+                        if (!session.RemoveMultiParmInstance(_nodeID, parameter._parmInfo.id,
+                            modifier.InstanceIndex + i)) rolledBack = false;
+                    }
+                    HEU_Logger.LogWarning(rolledBack
+                        ? "Asset drop cancelled. Each entry must contain exactly one visible, enabled scalar string field tagged heuassetpath. Existing entries were kept."
+                        : "Asset drop failed and could not remove every added entry. Inspect the multiparm before continuing.");
+                }
+                RequiresRegeneration = true;
+            }
+        }
+
         /// <summary>
         /// Goes through all pending parameter modifiers and actions on them.
         /// Deferred way to modify the parameter list after UI drawing.
@@ -2599,6 +2688,12 @@ namespace HoudiniEngineUnity
                 }
                 else if (paramModifier._action == HEU_ParameterModifier.ModifierAction.MULTIPARM_INSERT)
                 {
+                    if (paramModifier.AssetPaths != null && paramModifier.AssetPaths.Length > 0)
+                    {
+                        ProcessAssetDrop(session, parameter, paramModifier);
+                        continue;
+                    }
+
                     // Insert new parameter instances at the specified index
                     // paramModifier._instanceIndex is the location to add at
                     // paramModifier._modifierValue is the number of new parameter instances to add

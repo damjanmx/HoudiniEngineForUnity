@@ -1514,9 +1514,72 @@ namespace HoudiniEngineUnity
                             GUILayout.EndHorizontal();
                         }
                     }
+                    DrawMultiParmAssetDropArea(parameterData);
                 }
                 GUILayout.EndVertical();
             }
+        }
+
+        private void DrawMultiParmAssetDropArea(HEU_ParameterData multiparm)
+        {
+            // Empty multiparms have no child metadata until an instance is inserted.
+            // The session-side batch validates their template before assigning any paths.
+            if (multiparm._parmInfo.instanceCount > 0)
+            {
+                int matches = 0;
+                foreach (HEU_ParameterData child in _parameterList)
+                {
+                    HEU_ParameterData owner = child;
+                    while (owner != null && owner._parmInfo.parentId != multiparm._parmInfo.id)
+                    {
+                        owner = _parameters.GetParameterWithParmID(owner._parmInfo.parentId);
+                        if (owner != null && owner.IsMultiParam())
+                        {
+                            owner = null;
+                            break;
+                        }
+                    }
+                    if (owner != null && owner._parmInfo.instanceNum == multiparm._parmInfo.instanceStartOffset
+                        && child.IsAssetPath() && child._parmInfo.type == HAPI_ParmType.HAPI_PARMTYPE_STRING
+                        && child._parmInfo.size == 1 && child._parmInfo.choiceCount == 0)
+                    {
+                        ++matches;
+                    }
+                }
+                if (matches != 1) return;
+            }
+
+            Rect dropRect = GUILayoutUtility.GetRect(new GUIContent("Drop assets here to add entries"),
+                EditorStyles.helpBox, GUILayout.Height(36), GUILayout.ExpandWidth(true));
+            GUI.Box(dropRect, new GUIContent("Drop assets here to add entries",
+                "Append one entry per Project asset. Requires one scalar asset-path field per entry."),
+                EditorStyles.helpBox);
+            Event evt = Event.current;
+            if (!GUI.enabled || _parameterModifiers.Count > 0 || !dropRect.Contains(evt.mousePosition)
+                || (evt.type != EventType.DragUpdated && evt.type != EventType.DragPerform)) return;
+
+            List<string> paths = new List<string>();
+            foreach (UnityEngine.Object obj in DragAndDrop.objectReferences)
+            {
+                string path = AssetDatabase.GetAssetPath(obj);
+                if (!string.IsNullOrEmpty(path) && EditorUtility.IsPersistent(obj)
+                    && !AssetDatabase.IsValidFolder(path) && !paths.Contains(path))
+                {
+                    paths.Add(path);
+                }
+            }
+            DragAndDrop.visualMode = paths.Count > 0 ? DragAndDropVisualMode.Copy : DragAndDropVisualMode.Rejected;
+            if (evt.type == EventType.DragPerform && paths.Count > 0)
+            {
+                DragAndDrop.AcceptDrag();
+                HEU_ParameterModifier modifier = AddMultiParmModifierProperty(
+                    HEU_ParameterModifier.ModifierAction.MULTIPARM_INSERT, multiparm._unityIndex,
+                    multiparm._parmInfo.instanceStartOffset + multiparm._parmInfo.instanceCount, paths.Count);
+                modifier.AssetPaths = paths.ToArray();
+                EditorUtility.SetDirty(_parameters);
+                GUI.changed = true;
+            }
+            evt.Use();
         }
 
         private void DrawColorRampParamUICache(HEU_ParameterUICache paramUICache)

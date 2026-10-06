@@ -2,7 +2,7 @@
 
 ## Changelog and usage documentation
 
-**Documentation date:** 2 October 2026  
+**Documentation date:** 6 October 2026  
 **Scope:** Custom output features and subsequent fixes, rename and defaults for Houdini 22.0.459.  
 **Status:** Earlier custom version reported working by the user. Reapplication to the clean, compilation-fixed baseline requires a fresh Unity check.
 
@@ -13,6 +13,14 @@ Stage numbers below describe this project's changes; they are not official SideF
 ---
 
 ## 1. Cumulative changelog
+
+### Multiparm asset drops — 6 October 2026
+
+- Added an independent asset drop area to supported non-ramp multiparms.
+- Appends one entry per distinct dropped asset path, assigning the single `heuassetpath` string field and retaining defaults for the other new fields.
+- Supports empty lists through template validation; failed batches attempt to roll back only their own entries.
+- Uses the existing automatic/manual cooking workflow.
+- See [MULTIPARM_ASSET_DROP_README.md](MULTIPARM_ASSET_DROP_README.md) for usage, scope and verification status.
 
 ### Latest updates — 2 October 2026
 

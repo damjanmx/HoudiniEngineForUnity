@@ -92,6 +92,15 @@ namespace HoudiniEngineUnity
             set => _modifierValue = value;
         }
 
+        // Optional payload for one deferred multiparm asset-drop batch.
+        [SerializeField] private string[] _assetPaths;
+
+        public string[] AssetPaths
+        {
+            get => _assetPaths;
+            set => _assetPaths = value;
+        }
+
         [SerializeField] private float _floatValue;
 
         public float FloatValue
@@ -150,6 +159,10 @@ namespace HoudiniEngineUnity
             HEU_TestHelpers.AssertTrueLogEquivalent(this._floatValue, other._floatValue, ref bResult, header,
                 "_floatValue");
             HEU_TestHelpers.AssertTrueLogEquivalent(this._intValue, other._intValue, ref bResult, header, "_intValue");
+
+            HEU_TestHelpers.AssertTrueLogEquivalent(
+                HEU_GeneralUtility.DoArrayElementsMatch(this._assetPaths, other._assetPaths), true,
+                ref bResult, header, "_assetPaths");
 
             return bResult;
         }

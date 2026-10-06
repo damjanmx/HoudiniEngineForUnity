@@ -42,6 +42,10 @@ With `i@unity_use_instance_flags = 1;`, prefab and packed instances preserve sou
 
 Packed instances retain source prototype materials and collision geometry; this fork does not add prefab-style material or collision-asset replacement to packed instances. Ordinary non-instance meshes using `unity_path` continue to resolve their own attributes.
 
+## Multiparm asset drag and drop
+
+Drag several Project assets onto a multiparm’s **Drop assets here to add entries** area to append one entry per asset path. Each list is independent; other fields use their HDA defaults. Supports one scalar `heuassetpath` string field per entry. See [usage and limitations](Documentation/MULTIPARM_ASSET_DROP_README.md).
+
 ## Changed defaults
 
 | Setting | Custom default |
