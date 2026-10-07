@@ -46,6 +46,10 @@ Packed instances retain source prototype materials and collision geometry; this 
 
 Drag several Project assets onto a multiparm’s **Drop assets here to add entries** area to append one entry per asset path. Each list is independent; other fields use their HDA defaults. Supports one scalar `heuassetpath` string field per entry. See [usage and limitations](Documentation/MULTIPARM_ASSET_DROP_README.md).
 
+## Component profiles
+
+Create **Houdini Engine > Component Profile** assets from a template prefab and select configured root components to copy. Reference them with `unity_component_profile` for individual outputs or detail `unity_component_profile_root` for the baked prefab root. Profiles support keeping existing settings or overwriting them, with component-reference remapping. See [setup, usage and limitations](Documentation/COMPONENT_PROFILES_README.md).
+
 ## Baked prefab root attributes
 
 Use detail strings `unity_layer_root` to assign a layer to the baked root and all descendants, and `unity_script_root` to attach scripts to the baked root. Both apply to new prefab bakes and prefab updates. See [usage and precedence](Documentation/PREFAB_ROOT_ATTRIBUTES_README.md).

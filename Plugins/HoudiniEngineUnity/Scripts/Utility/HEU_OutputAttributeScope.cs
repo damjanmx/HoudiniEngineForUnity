@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -20,6 +20,7 @@ namespace HoudiniEngineUnity
         public List<Component> _scriptComponents = new List<Component>();
         public List<Component> _ownedScriptComponents = new List<Component>();
         public bool _ownsStore;
+        public string _componentProfilePath;
 
         internal int[] Indices(HAPI_AttributeOwner owner)
         {

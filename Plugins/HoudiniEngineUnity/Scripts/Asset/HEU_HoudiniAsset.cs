@@ -4194,6 +4194,8 @@ namespace HoudiniEngineUnity
             GetClonableParts(parts);
             string layerName = ReadBakedPrefabRootAttribute(session, parts, "unity_layer_root");
             string scripts = ReadBakedPrefabRootAttribute(session, parts, "unity_script_root");
+            string profile = ReadBakedPrefabRootAttribute(session, parts, "unity_component_profile_root");
+            HEU_ComponentProfile.Apply(profile, root);
 
             if (!string.IsNullOrEmpty(scripts))
             {

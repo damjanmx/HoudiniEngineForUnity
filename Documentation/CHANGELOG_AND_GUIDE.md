@@ -14,6 +14,14 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Component profiles — 7 October 2026
+
+- Added a Component Profile asset and Inspector with template selection, component checkboxes and existing-component policy.
+- Added `unity_component_profile` on generated outputs/instances and detail `unity_component_profile_root` on baked prefab roots.
+- Added serialized settings copying, component-reference remapping, template validation and generated-geometry protection.
+- See [COMPONENT_PROFILES_README.md](COMPONENT_PROFILES_README.md) for supported components, attribute precedence and additive recook behavior.
+
+
 ### Baked prefab root attributes — 7 October 2026
 
 - Added detail strings `unity_layer_root` (root and all descendants) and `unity_script_root` (root only).

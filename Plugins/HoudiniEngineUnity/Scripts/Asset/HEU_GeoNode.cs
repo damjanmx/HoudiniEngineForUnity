@@ -644,6 +644,7 @@ namespace HoudiniEngineUnity
                     {
                         HEU_GeneralUtility.AttachScriptWithInvokeFunction(scriptValue, outputGO);
                     }
+                    part.ApplyUnscopedComponentProfile(session);
                 }
             }
         }

@@ -164,6 +164,7 @@ namespace HoudiniEngineUnity
         [SerializeField] private List<GameObject> _unityParentGroups = new List<GameObject>();
         [SerializeField] private bool _hasUnityPathMeshes;
         [SerializeField] private string _unityPathOriginalName;
+        [SerializeField] private string _componentProfilePath;
         [SerializeField] private List<HEU_OutputAttributeScope> _scopedOutputs = new List<HEU_OutputAttributeScope>();
         [SerializeField] private bool _unityPathVisible = true;
         [SerializeField] private List<GameObject> _packedInstances = new List<GameObject>();
@@ -2024,6 +2025,8 @@ namespace HoudiniEngineUnity
                 HEU_GeneralUtility.DestroyImmediate(targetTerrainCollider);
             }
 #endif
+            if (partData != null && sourceGO == partData.OutputGameObject)
+                HEU_ComponentProfile.Apply(partData._componentProfilePath, targetGO, sourceGO);
         }
 
         /// <summary>
@@ -2496,6 +2499,7 @@ namespace HoudiniEngineUnity
                 if (destination == null) destination = target.AddComponent(component.GetType());
                 if (destination != null) UnityEditor.EditorUtility.CopySerialized(component, destination);
             }
+            HEU_ComponentProfile.Apply(scope._componentProfilePath, target, source);
 #endif
         }
 
@@ -2526,6 +2530,30 @@ namespace HoudiniEngineUnity
 #endif
         }
 
+        internal void ApplyUnscopedComponentProfile(HEU_SessionBase session)
+        {
+            _componentProfilePath = null;
+            if (OutputGameObject == null) return;
+            HAPI_PartInfo info = new HAPI_PartInfo();
+            if (!session.GetPartInfo(_geoID, _partID, ref info)) return;
+            HEU_OutputAttributeScope scope = new HEU_OutputAttributeScope();
+            scope._gameObject = OutputGameObject;
+            scope._path = OutputGameObject.name;
+            scope._primitives = MakeProfileIndices(info.faceCount);
+            scope._points = MakeProfileIndices(info.pointCount);
+            scope._vertices = MakeProfileIndices(info.vertexCount);
+            HEU_OutputAttributeReader reader = new HEU_OutputAttributeReader(session, _geoID, _partID);
+            _componentProfilePath = reader.StringValue(scope, "unity_component_profile");
+            HEU_ComponentProfile.Apply(_componentProfilePath, OutputGameObject);
+        }
+
+        private static int[] MakeProfileIndices(int count)
+        {
+            int[] indices = new int[count];
+            for (int i = 0; i < count; ++i) indices[i] = i;
+            return indices;
+        }
+
         internal bool UsesScopedOutputAttributes(HEU_SessionBase session)
         {
             return _hasUnityPathMeshes || IsPartInstancer() || (IsAttribInstancer()
@@ -2541,9 +2569,15 @@ namespace HoudiniEngineUnity
 
         internal void ApplyScopedOutputScripts(HEU_SessionBase session)
         {
+            _componentProfilePath = null;
             HEU_OutputAttributeReader reader = new HEU_OutputAttributeReader(session, _geoID, _partID);
             foreach (HEU_OutputAttributeScope scope in _scopedOutputs)
-                if (scope._gameObject != null) reader.ApplyScript(scope);
+                if (scope._gameObject != null)
+                {
+                    reader.ApplyScript(scope);
+                    scope._componentProfilePath = reader.StringValue(scope, "unity_component_profile");
+                    HEU_ComponentProfile.Apply(scope._componentProfilePath, scope._gameObject);
+                }
         }
 
         private string[] GetUnityPrimitivePaths(HEU_SessionBase session, int faceCount)
