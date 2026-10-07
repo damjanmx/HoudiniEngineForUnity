@@ -1059,6 +1059,7 @@ namespace HoudiniEngineUnity
 
                     string cleanAssetName = HEU_AssetDatabase.MakeValidFileName(_assetName);
                     string prefabPath = HEU_AssetDatabase.AppendPrefabPath(bakedAssetPath, cleanAssetName);
+                    ApplyBakedPrefabRootAttributes(newClonedRoot);
                     GameObject prefabGO = HEU_EditorUtility.SaveAsPrefabAsset(prefabPath, newClonedRoot);
                     if (prefabGO != null)
                     {
@@ -1187,6 +1188,7 @@ namespace HoudiniEngineUnity
                     }
 
                     // Note using ReplacePrefabOptions.ReplaceNameBased will keep local transform values and other changes on instances.
+                    ApplyBakedPrefabRootAttributes(newClonedRoot);
                     HEU_EditorUtility.ReplacePrefab(newClonedRoot, bakeTargetGO, HEU_EditorUtility.HEU_ReplacePrefabOptions.ReplaceNameBased);
 
                     InvokeBakedEvent(true, new List<GameObject>() { bakeTargetGO }, false);
@@ -4181,6 +4183,68 @@ namespace HoudiniEngineUnity
             }
 
             return null;
+        }
+
+        // Only called for prefab bakes, after hierarchy construction and before serialization.
+        private void ApplyBakedPrefabRootAttributes(GameObject root)
+        {
+            HEU_SessionBase session = GetAssetSession(false);
+            if (root == null || session == null) return;
+            List<HEU_PartData> parts = new List<HEU_PartData>();
+            GetClonableParts(parts);
+            string layerName = ReadBakedPrefabRootAttribute(session, parts, "unity_layer_root");
+            string scripts = ReadBakedPrefabRootAttribute(session, parts, "unity_script_root");
+
+            if (!string.IsNullOrEmpty(scripts))
+            {
+                HEU_GeneralUtility.AttachScriptWithInvokeFunction(scripts, root);
+            }
+            if (!string.IsNullOrEmpty(layerName))
+            {
+                int layer = LayerMask.NameToLayer(layerName);
+                if (layer < 0)
+                {
+                    HEU_Logger.LogWarningFormat("unity_layer_root: Unity layer '{0}' does not exist. Baked layers were not overridden.", layerName);
+                }
+                else
+                {
+                    // Deliberately overrides individual output and instance layers, including inactive children.
+                    HEU_GeneralUtility.SetLayer(root, layer, true);
+                }
+            }
+        }
+
+        private string ReadBakedPrefabRootAttribute(HEU_SessionBase session,
+            List<HEU_PartData> parts, string attributeName)
+        {
+            string selected = null;
+            foreach (HEU_PartData part in parts)
+            {
+                HAPI_AttributeInfo info = new HAPI_AttributeInfo();
+                if (!session.GetAttributeInfo(part.GeoID, part.PartID, attributeName,
+                    HAPI_AttributeOwner.HAPI_ATTROWNER_DETAIL, ref info) || !info.exists) continue;
+                if (info.storage != HAPI_StorageType.HAPI_STORAGETYPE_STRING || info.tupleSize != 1 || info.count != 1)
+                {
+                    HEU_Logger.LogWarningFormat("{0} must be a scalar detail string attribute (geo {1}, part {2}).",
+                        attributeName, part.GeoID, part.PartID);
+                    continue;
+                }
+                int[] handles = new int[1];
+                if (!session.GetAttributeStringData(part.GeoID, part.PartID, attributeName, ref info, handles, 0, 1))
+                {
+                    HEU_Logger.LogWarningFormat("Unable to read {0} for prefab baking.", attributeName);
+                    continue;
+                }
+                string value = HEU_SessionManager.GetString(handles[0], session);
+                if (string.IsNullOrEmpty(value)) continue;
+                if (selected == null) selected = value;
+                else if (selected != value)
+                {
+                    HEU_Logger.LogWarningFormat("Conflicting {0} values on HDA outputs. Using the first non-empty value: '{1}'.",
+                        attributeName, selected);
+                }
+            }
+            return selected;
         }
 
         private void InvokeBakedEvent(bool bSuccess, List<GameObject> outputObjects, bool isNewBake)

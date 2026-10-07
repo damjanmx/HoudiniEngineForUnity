@@ -14,6 +14,14 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Baked prefab root attributes — 7 October 2026
+
+- Added detail strings `unity_layer_root` (root and all descendants) and `unity_script_root` (root only).
+- Applied both before saving new or updated prefabs, using existing layer and script utilities.
+- Added detail/type validation and warnings for conflicting output values or unknown layers.
+- See [PREFAB_ROOT_ATTRIBUTES_README.md](PREFAB_ROOT_ATTRIBUTES_README.md).
+
+
 ### Scene-folder prefab baking — 7 October 2026
 
 - Added **Bake To The Scene Folder**, default off, in a separate **Bake Options** section below **Bake Update**.
