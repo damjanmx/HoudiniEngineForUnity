@@ -815,6 +815,7 @@ namespace HoudiniEngineUnity
 
                         if (GUILayout.Button(_bakeprefabContent, _mainButtonStyle))
                         {
+                            assetObject.ApplyModifiedProperties();
                             asset.BakeToNewPrefab();
                         }
                     }
@@ -882,6 +883,9 @@ namespace HoudiniEngineUnity
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeUpdateDeleteAllBakedData",
                             "Delete All Baked Folders",
                             "Prefab targets only. On: delete baked resource folders before baking. Off: overwrite matching files and keep all other files.");
+                        HEU_EditorUI.EndSimpleSection();
+
+                        HEU_EditorUI.BeginSimpleSection("Bake Options");
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeToTheSceneFolder",
                             "Bake To The Scene Folder",
                             "New prefabs only. Save the prefab and its resource folders under HdaBakedData beside the saved active scene. Existing prefab targets are updated in place.");

@@ -16,7 +16,7 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ### Scene-folder prefab baking — 7 October 2026
 
-- Added **Bake To The Scene Folder**, default off, below the baked-folder deletion setting.
+- Added **Bake To The Scene Folder**, default off, in a separate **Bake Options** section below **Bake Update**.
 - New prefab bakes can save their prefab and usual resource folders under the active scene directory's `HdaBakedData` folder.
 - Existing prefab updates stay at their target location; explicit API destinations retain precedence.
 - Renamed **Delete all baked data** to **Delete All Baked Folders**, retaining its serialized value and behavior.

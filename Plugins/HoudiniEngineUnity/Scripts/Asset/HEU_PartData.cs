@@ -1852,7 +1852,8 @@ namespace HoudiniEngineUnity
                 if (sourceTerrainData != null)
                 {
                     targetTerrainData = targetTerrain.terrainData;
-                    if (targetTerrainData != null && targetTerrainData != sourceTerrainData && HEU_AssetDatabase.ContainsAsset(targetTerrainData))
+                    if (string.IsNullOrEmpty(bakedAssetPath) && targetTerrainData != null
+                        && targetTerrainData != sourceTerrainData && HEU_AssetDatabase.ContainsAsset(targetTerrainData))
                     {
                         // Get path to existing terrain data asset location
                         bakedAssetPath = HEU_AssetDatabase.GetAssetRootPath(targetTerrainData);

@@ -21,7 +21,7 @@ To verify: bake a prefab, place an unrelated test asset in its Meshes folder, ch
 
 ## Bake To The Scene Folder
 
-The **Bake To The Scene Folder** toggle sits directly below **Delete All Baked Folders** and defaults to **off**. It is saved per HDA.
+The **Bake To The Scene Folder** toggle sits in the **Bake Options** section directly below **Bake Update** and defaults to **off**. It is saved per HDA.
 
 - **Off:** new prefab bakes use the existing HoudiniEngineAssetCache destination.
 - **On:** new prefab bakes save under `HdaBakedData` beside the currently active saved Unity scene. For `Assets/Scenes/Level01.unity`, the destination is `Assets/Scenes/HdaBakedData/<asset folder>/`.
@@ -35,3 +35,11 @@ The **Bake To The Scene Folder** toggle sits directly below **Delete All Baked F
 The previous deletion label was **Delete all baked data**. Only its displayed label changed; its saved value and behavior are retained.
 
 Scene-folder routing was source-checked; Unity compilation and actual prefab/resource baking still need verification in the Unity project.
+
+## Scene-folder creation
+
+The plugin creates `HdaBakedData` before choosing the unique asset folder. The normal bake process creates resource subfolders only when needed; it does not pre-create empty Meshes, Materials, Textures or Terrain folders.
+
+The prefab button applies current Inspector settings before starting. Terrain updates preserve the selected bake destination. Use **Bake Prefab** for a new scene-folder bake; **Update Prefab** continues to update the existing target in place.
+
+Empty folders created by the previous patch are not automatically removed. This update prevents new unused resource folders from being created.

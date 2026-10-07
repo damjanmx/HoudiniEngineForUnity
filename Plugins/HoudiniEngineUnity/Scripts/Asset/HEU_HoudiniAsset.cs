@@ -1030,11 +1030,18 @@ namespace HoudiniEngineUnity
 
                 string sceneFolder = scenePath.Substring(0, scenePath.LastIndexOf('/'));
                 string sceneBakeRoot = sceneFolder + "/HdaBakedData";
+                // Establish the parent before asking Unity for a unique destination.
+                HEU_AssetDatabase.CreatePathWithFolders(sceneBakeRoot);
                 string cleanFolderName = HEU_AssetDatabase.MakeValidFileName(_assetName);
                 if (string.IsNullOrEmpty(cleanFolderName)) cleanFolderName = "HDA";
                 bakedAssetPath = HEU_AssetDatabase.GetUniqueAssetPath(sceneBakeRoot + "/" + cleanFolderName);
-                if (string.IsNullOrEmpty(bakedAssetPath)) return null;
+                if (string.IsNullOrEmpty(bakedAssetPath))
+                {
+                    HEU_Logger.LogErrorFormat("Unable to choose a unique bake folder under {0}.", sceneBakeRoot);
+                    return null;
+                }
                 HEU_AssetDatabase.CreatePathWithFolders(bakedAssetPath);
+                HEU_Logger.LogFormat("Baking prefab to scene folder: {0}", bakedAssetPath);
             }
 
             bool bWriteMeshesToAssetDatabase = true;
