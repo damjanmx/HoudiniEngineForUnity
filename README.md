@@ -46,6 +46,10 @@ Packed instances retain source prototype materials and collision geometry; this 
 
 Drag several Project assets onto a multiparm’s **Drop assets here to add entries** area to append one entry per asset path. Each list is independent; other fields use their HDA defaults. Supports one scalar `heuassetpath` string field per entry. See [usage and limitations](Documentation/MULTIPARM_ASSET_DROP_README.md).
 
+## Prefab bake location
+
+Enable **Bake To The Scene Folder** to create new prefabs and their generated resource folders under `HdaBakedData` beside the active saved scene. It defaults to off. **Delete All Baked Folders** controls cleanup when updating an existing prefab; existing targets continue to update in place. See [bake settings](Documentation/BAKE_UPDATE_README.md).
+
 ## Changed defaults
 
 | Setting | Custom default |

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) <2020> Side Effects Software Inc.
  * All rights reserved.
  *
@@ -666,6 +666,8 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _bakeUpdateDeleteAllBakedData = false;
 
+        [SerializeField] private bool _bakeToTheSceneFolder = false;
+
 
         // If false, pauses all cooking on this HDA until set back to true. Meant for unit testing use.
        private bool _pauseCooking = false;
@@ -1013,6 +1015,26 @@ namespace HoudiniEngineUnity
             {
                 char[] trimChars = { '/', '\\' };
                 bakedAssetPath = destinationPrefabPath.TrimEnd(trimChars);
+            }
+
+            if (string.IsNullOrEmpty(bakedAssetPath) && _bakeToTheSceneFolder)
+            {
+                // Resolve before cloning so every generated resource shares the prefab's folder.
+                string scenePath = UnityEngine.SceneManagement.SceneManager.GetActiveScene().path;
+                if (string.IsNullOrEmpty(scenePath) || !scenePath.StartsWith("Assets/", System.StringComparison.Ordinal)
+                    || !scenePath.EndsWith(".unity", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    HEU_Logger.LogWarning("Bake To The Scene Folder: save the active scene under Assets before baking a prefab.");
+                    return null;
+                }
+
+                string sceneFolder = scenePath.Substring(0, scenePath.LastIndexOf('/'));
+                string sceneBakeRoot = sceneFolder + "/HdaBakedData";
+                string cleanFolderName = HEU_AssetDatabase.MakeValidFileName(_assetName);
+                if (string.IsNullOrEmpty(cleanFolderName)) cleanFolderName = "HDA";
+                bakedAssetPath = HEU_AssetDatabase.GetUniqueAssetPath(sceneBakeRoot + "/" + cleanFolderName);
+                if (string.IsNullOrEmpty(bakedAssetPath)) return null;
+                HEU_AssetDatabase.CreatePathWithFolders(bakedAssetPath);
             }
 
             bool bWriteMeshesToAssetDatabase = true;
