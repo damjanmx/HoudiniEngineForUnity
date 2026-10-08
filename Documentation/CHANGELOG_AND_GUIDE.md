@@ -14,6 +14,15 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Component profile property bindings — 7 October 2026
+
+- Added component/property pickers and required `unity_cp_` attribute names.
+- Added scoped numeric, boolean, string, enum, vector, color, quaternion, bounds/rect, asset-reference and fixed-tuple list conversions.
+- Applied bindings after profile settings during cooking and baking, including detail-only root bindings.
+- Added per-binding validation and warnings; unsupported or missing values do not block other bindings.
+- See [COMPONENT_PROFILE_BINDINGS_README.md](COMPONENT_PROFILE_BINDINGS_README.md).
+
+
 ### Component profiles — 7 October 2026
 
 - Added a Component Profile asset and Inspector with template selection, component checkboxes and existing-component policy.

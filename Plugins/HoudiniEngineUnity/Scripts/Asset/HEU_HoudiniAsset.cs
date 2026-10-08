@@ -4195,7 +4195,7 @@ namespace HoudiniEngineUnity
             string layerName = ReadBakedPrefabRootAttribute(session, parts, "unity_layer_root");
             string scripts = ReadBakedPrefabRootAttribute(session, parts, "unity_script_root");
             string profile = ReadBakedPrefabRootAttribute(session, parts, "unity_component_profile_root");
-            HEU_ComponentProfile.Apply(profile, root);
+            HEU_ComponentProfile.Apply(profile, root, null, name => ReadRootProfileBinding(session, parts, name));
 
             if (!string.IsNullOrEmpty(scripts))
             {
@@ -4214,6 +4214,26 @@ namespace HoudiniEngineUnity
                     HEU_GeneralUtility.SetLayer(root, layer, true);
                 }
             }
+        }
+
+        private HEU_OutputAttribute ReadRootProfileBinding(HEU_SessionBase session,
+            List<HEU_PartData> parts, string name)
+        {
+            HEU_OutputAttribute selected = null;
+            foreach (HEU_PartData part in parts)
+            {
+                HEU_OutputAttributeReader reader = new HEU_OutputAttributeReader(session, part.GeoID, part.PartID);
+                // Empty element lists restrict this scope to DETAIL ownership only.
+                HEU_OutputAttribute value = reader.Select(new HEU_OutputAttributeScope(), name);
+                if (value == null) continue;
+                if (selected == null) selected = value;
+                else if (selected._type != value._type || selected._tupleSize != value._tupleSize
+                    || !HEU_GeneralUtility.DoArrayElementsMatch(selected._intValues, value._intValues)
+                    || !HEU_GeneralUtility.DoArrayElementsMatch(selected._floatValues, value._floatValues)
+                    || !HEU_GeneralUtility.DoArrayElementsMatch(selected._stringValues, value._stringValues))
+                    HEU_Logger.LogWarning("Conflicting root component binding " + name + "; using the first output value.");
+            }
+            return selected;
         }
 
         private string ReadBakedPrefabRootAttribute(HEU_SessionBase session,

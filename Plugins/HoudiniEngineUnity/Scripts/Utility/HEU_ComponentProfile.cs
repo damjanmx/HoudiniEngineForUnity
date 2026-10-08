@@ -8,7 +8,7 @@ using UnityEditor;
 namespace HoudiniEngineUnity
 {
     [CreateAssetMenu(fileName = "ComponentProfile", menuName = "Houdini Engine/Component Profile")]
-    public class HEU_ComponentProfile : ScriptableObject
+    public partial class HEU_ComponentProfile : ScriptableObject
     {
         public enum ExistingComponentMode { KeepExisting, OverwriteSettings }
         public GameObject TemplatePrefab;
@@ -87,7 +87,8 @@ namespace HoudiniEngineUnity
         }
 #endif
 
-        public static void Apply(string assetPath, GameObject target, GameObject sourceOutput = null)
+        public static void Apply(string assetPath, GameObject target, GameObject sourceOutput = null,
+            Func<string, HEU_OutputAttribute> attributeResolver = null)
         {
 #if UNITY_EDITOR
             if (string.IsNullOrEmpty(assetPath) || target == null) return;
@@ -189,6 +190,7 @@ namespace HoudiniEngineUnity
                     if (PrefabUtility.IsPartOfPrefabInstance(destination))
                         PrefabUtility.RecordPrefabInstancePropertyModifications(destination);
                 }
+                ApplyAttributeBindings(profile, map, attributeResolver);
             }
             catch (Exception ex)
             {

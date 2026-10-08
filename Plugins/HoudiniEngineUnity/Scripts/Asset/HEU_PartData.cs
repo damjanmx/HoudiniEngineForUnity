@@ -2026,7 +2026,7 @@ namespace HoudiniEngineUnity
             }
 #endif
             if (partData != null && sourceGO == partData.OutputGameObject)
-                HEU_ComponentProfile.Apply(partData._componentProfilePath, targetGO, sourceGO);
+                partData.ApplyBakedComponentProfile(sourceGO, targetGO);
         }
 
         /// <summary>
@@ -2499,7 +2499,7 @@ namespace HoudiniEngineUnity
                 if (destination == null) destination = target.AddComponent(component.GetType());
                 if (destination != null) UnityEditor.EditorUtility.CopySerialized(component, destination);
             }
-            HEU_ComponentProfile.Apply(scope._componentProfilePath, target, source);
+            part.ApplyBakedComponentProfile(source, target);
 #endif
         }
 
@@ -2544,7 +2544,32 @@ namespace HoudiniEngineUnity
             scope._vertices = MakeProfileIndices(info.vertexCount);
             HEU_OutputAttributeReader reader = new HEU_OutputAttributeReader(session, _geoID, _partID);
             _componentProfilePath = reader.StringValue(scope, "unity_component_profile");
-            HEU_ComponentProfile.Apply(_componentProfilePath, OutputGameObject);
+            HEU_ComponentProfile.Apply(_componentProfilePath, OutputGameObject, null, name => reader.Select(scope, name));
+        }
+
+        private void ApplyBakedComponentProfile(GameObject source, GameObject target)
+        {
+            HEU_OutputAttributeScope scope = _scopedOutputs.Find(item => item._gameObject == source);
+            string path = scope != null ? scope._componentProfilePath : _componentProfilePath;
+            if (string.IsNullOrEmpty(path)) return;
+            HEU_SessionBase session = ParentAsset.GetAssetSession(false);
+            if (session == null)
+            {
+                HEU_ComponentProfile.Apply(path, target, source);
+                return;
+            }
+            if (scope == null)
+            {
+                HAPI_PartInfo info = new HAPI_PartInfo();
+                if (!session.GetPartInfo(_geoID, _partID, ref info)) return;
+                scope = new HEU_OutputAttributeScope();
+                scope._gameObject = source;
+                scope._primitives = MakeProfileIndices(info.faceCount);
+                scope._points = MakeProfileIndices(info.pointCount);
+                scope._vertices = MakeProfileIndices(info.vertexCount);
+            }
+            HEU_OutputAttributeReader reader = new HEU_OutputAttributeReader(session, _geoID, _partID);
+            HEU_ComponentProfile.Apply(path, target, source, name => reader.Select(scope, name));
         }
 
         private static int[] MakeProfileIndices(int count)
@@ -2576,7 +2601,7 @@ namespace HoudiniEngineUnity
                 {
                     reader.ApplyScript(scope);
                     scope._componentProfilePath = reader.StringValue(scope, "unity_component_profile");
-                    HEU_ComponentProfile.Apply(scope._componentProfilePath, scope._gameObject);
+                    HEU_ComponentProfile.Apply(scope._componentProfilePath, scope._gameObject, null, name => reader.Select(scope, name));
                 }
         }
 

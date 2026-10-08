@@ -75,3 +75,7 @@ Source syntax and integration checks passed; Unity compilation and live cook/bak
 - Bake and Update Prefab; confirm no profile component points back to the template or live HDA counterparts.
 - Apply a root profile alongside `unity_script_root` and `unity_layer_root`.
 - Test an invalid child reference and confirm the profile is rejected with a warning.
+
+## Attribute-driven property values
+
+Profiles now support **Attribute Bindings** with required `unity_cp_` names. Use the component/property pickers to connect scoped Houdini attributes to serialized Unity values. See [COMPONENT_PROFILE_BINDINGS_README.md](COMPONENT_PROFILE_BINDINGS_README.md) for setup, types, arrays and root bindings.
