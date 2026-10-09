@@ -731,6 +731,11 @@ namespace HoudiniEngineUnity
             newInput._inputNodeType = inputNodeType;
             newInput._parentAsset = parentAsset;
 
+            // Seed newly created inputs only. Preserve explicitly cleared or restored lists.
+            // Both modes start ready for assignment without requiring Add Slot.
+            newInput._inputObjects.Add(new HEU_InputObjectInfo());
+            newInput._inputAssetInfos.Add(new HEU_InputHDAInfo());
+
             newInput._requiresUpload = false;
             newInput._requiresCook = false;
 
