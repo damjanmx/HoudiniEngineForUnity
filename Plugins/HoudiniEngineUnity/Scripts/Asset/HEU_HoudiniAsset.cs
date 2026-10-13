@@ -671,6 +671,8 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _bakeAddPrefabSuffix = true;
 
+        [SerializeField] private bool _bakeAddPrefabToScene = true;
+
 
         // If false, pauses all cooking on this HDA until set back to true. Meant for unit testing use.
        private bool _pauseCooking = false;
@@ -1061,11 +1063,21 @@ namespace HoudiniEngineUnity
                         bakedAssetPath = HEU_AssetDatabase.CreateUniqueBakePath(_assetName);
                     }
 
-                    string cleanAssetName = HEU_AssetDatabase.MakeValidFileName(_assetName);
+                    string assetNameSuffix = null;
+                    HEU_SessionBase namingSession = GetAssetSession(false);
+                    if (namingSession != null)
+                    {
+                        List<HEU_PartData> namingParts = new List<HEU_PartData>();
+                        GetClonableParts(namingParts);
+                        assetNameSuffix = ReadBakedPrefabRootAttribute(namingSession, namingParts, "unity_asset_name_suffix");
+                    }
+                    // Preserve the asset name (including numbers), then insert the authored
+                    // text before the optional prefab suffix. Sanitize the combined filename.
+                    string cleanAssetName = HEU_AssetDatabase.MakeValidFileName(_assetName + assetNameSuffix);
                     if (_bakeAddPrefabSuffix && !cleanAssetName.EndsWith("_prefab", System.StringComparison.Ordinal))
                         cleanAssetName += "_prefab";
                     string prefabPath = HEU_AssetDatabase.AppendPrefabPath(bakedAssetPath, cleanAssetName);
-                    if (_bakeAddPrefabSuffix)
+                    if (_bakeAddPrefabSuffix || !string.IsNullOrEmpty(assetNameSuffix))
                         HEU_GeneralUtility.RenameGameObject(newClonedRoot, cleanAssetName);
                     ApplyBakedPrefabRootAttributes(newClonedRoot);
                     GameObject prefabGO = HEU_EditorUtility.SaveAsPrefabAsset(prefabPath, newClonedRoot);
@@ -5464,6 +5476,7 @@ namespace HoudiniEngineUnity
             newAsset._showBakeSection = this._showBakeSection;
             newAsset._bakeSectionDefaultApplied = this._bakeSectionDefaultApplied;
             newAsset._bakeAddPrefabSuffix = this._bakeAddPrefabSuffix;
+            newAsset._bakeAddPrefabToScene = this._bakeAddPrefabToScene;
             newAsset._showEventsSection = this._showEventsSection;
             newAsset._showCurvesSection = this._showCurvesSection;
             newAsset._showInputNodesSection = this._showInputNodesSection;

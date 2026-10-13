@@ -345,3 +345,31 @@ This addresses components being added with default values rather than the templa
 7. Check a custom script with nested/array values and component references to verify copying and remapping still work.
 
 Source review confirms the other profile iterator loops already start with Next(true). Unity compilation and live execution remain to be verified in the user's project. Keep Existing intentionally preserves existing component settings; use Overwrite Settings or a fresh output when retesting this fix.
+
+
+## Custom asset name suffix
+
+See [unity_asset_name_suffix usage and verification](UNITY_ASSET_NAME_SUFFIX_README.md). This addition needs a new Unity check following the previously completed test round.
+
+
+## Add Prefab To Scene — 13 October 2026
+
+**Add Prefab To Scene** appears directly below **Add _prefab Suffix** in Bake Options and defaults to **on**. The setting persists per HDA; it does not reset after each bake.
+
+When you press **Bake Prefab**, a successful bake is instantiated as a connected prefab instance in the HDA's scene. It uses the baked transform and is placed under the same parent as the HDA, preserving world placement. The HDA root GameObject is then deactivated, hiding its generated children while retaining it for future edits. The new prefab instance is selected and the scene is marked modified.
+
+Turn the setting off to bake the asset without placing it or deactivating the HDA. Failed/cancelled bakes do not deactivate it. Reactivate the HDA in the Hierarchy when you need to edit it again. Placement and HDA deactivation participate in editor Undo; the saved prefab asset is not deleted by that scene undo.
+
+This behavior is exclusive to the Inspector's Bake Prefab button. Update Prefab, standalone baking and direct BakeToNewPrefab API calls do not place instances or deactivate the HDA. Automatic registration in the bake target list still points to the prefab asset.
+
+### Verification
+
+- Bake with the toggle on: one connected prefab appears, HDA becomes inactive, output stays in the same world position.
+- Test a rotated/scaled parent and a single-part output with an offset; check transform preservation.
+- Test a multi-scene setup: instance goes into the HDA's scene.
+- Toggle off: bake creates only the asset and HDA stays active.
+- Update Prefab: no extra scene instance and no HDA deactivation.
+- Cancel/fail a bake: HDA remains active.
+- Undo scene changes: instance is removed and HDA activity restored; saved asset remains.
+
+Source checks completed; Unity runtime verification is required for this new behavior.

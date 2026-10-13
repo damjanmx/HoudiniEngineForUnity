@@ -824,7 +824,31 @@ namespace HoudiniEngineUnity
                         {
                             assetObject.ApplyModifiedProperties();
                             assetRootSerializedObject.ApplyModifiedProperties();
-                            asset.BakeToNewPrefab();
+                            bool addToScene = assetObject.FindProperty("_bakeAddPrefabToScene").boolValue;
+                            GameObject bakedPrefab = asset.BakeToNewPrefab();
+                            if (addToScene && bakedPrefab != null && asset.RootGameObject != null)
+                            {
+                                GameObject hdaRoot = asset.RootGameObject;
+                                if (hdaRoot.scene.IsValid() && hdaRoot.scene.isLoaded)
+                                {
+                                    GameObject instance = PrefabUtility.InstantiatePrefab(bakedPrefab, hdaRoot.scene) as GameObject;
+                                    if (instance != null)
+                                    {
+                                        Undo.RegisterCreatedObjectUndo(instance, "Add Baked Prefab To Scene");
+                                        // The bake already contains the output's world transform,
+                                        // including single-part offsets. Preserve it when parenting.
+                                        if (hdaRoot.transform.parent != null)
+                                            Undo.SetTransformParent(instance.transform, hdaRoot.transform.parent, "Parent Baked Prefab");
+                                        Undo.RecordObject(hdaRoot, "Disable Baked HDA");
+                                        hdaRoot.SetActive(false);
+                                        UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(hdaRoot.scene);
+                                        Selection.activeGameObject = instance;
+                                        bSkipAutoCook = true;
+                                    }
+                                    else HEU_Logger.LogWarning("Prefab was baked, but could not be added to the scene. HDA remains active.");
+                                }
+                                else HEU_Logger.LogWarning("Prefab was baked, but the HDA has no loaded scene. HDA remains active.");
+                            }
                             assetRootSerializedObject.Update();
                         }
                     }
@@ -898,6 +922,9 @@ namespace HoudiniEngineUnity
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeAddPrefabSuffix",
                             "Add _prefab Suffix",
                             "Append _prefab to new baked prefab names. Existing prefab targets keep their current filename.");
+                        HEU_EditorUI.DrawPropertyField(assetObject, "_bakeAddPrefabToScene",
+                            "Add Prefab To Scene",
+                            "Bake Prefab button only. Add the new prefab to the HDA's scene and deactivate the HDA after successful placement.");
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeToTheSceneFolder",
                             "Bake To The Scene Folder",
                             "New prefabs only. Save the prefab and its resource folders under HdaBakedData beside the saved active scene. Existing prefab targets are updated in place.");

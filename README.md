@@ -64,6 +64,10 @@ Enable **Bake To The Scene Folder** to create new prefabs and their generated re
 
 ## Bake workflow and prefab names
 
+**Add Prefab To Scene**, enabled by default beneath **Add _prefab Suffix**, places a newly baked prefab in the HDA’s scene and deactivates the HDA after successful placement. Only the **Bake Prefab** button performs this action; updates remain unchanged. Disable the toggle to keep asset-only baking.
+
+Use the string detail attribute **`unity_asset_name_suffix`** to insert custom text after the asset name and before the optional `_prefab` suffix. For example, `s@unity_asset_name_suffix = "_large";` produces `Bridge_1_2_large_prefab.prefab`. Missing or empty preserves current naming. Applies to new prefab bakes; existing targets retain their filenames. See [naming details](Documentation/UNITY_ASSET_NAME_SUFFIX_README.md).
+
 The **Bake** section opens expanded by default, including once for existing HDAs. You can still collapse it afterward. A successful new prefab bake automatically appends that prefab to the HDA's update target list, preserving existing entries. Review the list before updating multiple baked variants.
 
 Under **Bake Options**, **Add _prefab Suffix** defaults to **on**. New prefab filenames and root names receive `_prefab`; an existing exact suffix is not doubled. Turning it off restores the previous naming behavior. The setting persists, and changing it does not rename previously baked prefabs.

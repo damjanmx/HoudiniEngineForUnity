@@ -14,6 +14,27 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Add baked prefab to scene — 13 October 2026
+
+- Added Add Prefab To Scene, default on, below Add _prefab Suffix.
+- Bake Prefab places a connected instance in the HDA scene and deactivates the HDA only after successful placement.
+- Retains baked world placement, supports scene Undo, and leaves updates/API bakes unchanged.
+- See [BAKE_UPDATE_README.md](BAKE_UPDATE_README.md). Unity validation pending.
+
+### Asset naming attribute rename — 13 October 2026
+
+- Renamed the newly introduced naming attribute to `unity_asset_name_suffix`, matching the existing lowercase underscore naming style.
+- The previous attribute name is no longer read; update any newly authored HDAs to the new name.
+- Behavior is unchanged: new prefab names use asset name + attribute value + optional `_prefab`. Existing prefab update destinations remain unchanged.
+
+
+### Custom prefab asset name suffix — 13 October 2026
+
+- Added scalar detail string `unity_asset_name_suffix` for new prefab filenames and roots.
+- Naming order: asset name + literal infix + optional `_prefab`.
+- Preserved missing/empty behavior and existing update destinations.
+- See [UNITY_ASSET_NAME_SUFFIX_README.md](UNITY_ASSET_NAME_SUFFIX_README.md). Unity test pending.
+
 ### Component profile settings copy — 13 October 2026
 
 - Fixed initial serialized-property iteration so template settings can be copied after adding components.
