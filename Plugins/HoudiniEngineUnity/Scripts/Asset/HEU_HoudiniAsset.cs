@@ -584,7 +584,8 @@ namespace HoudiniEngineUnity
 
         [SerializeField] private bool _showGenerateSection = true;
 
-        [SerializeField] private bool _showBakeSection = false;
+        [SerializeField] private bool _showBakeSection = true;
+        [SerializeField] private bool _bakeSectionDefaultApplied = false;
 
         [SerializeField] private bool _showEventsSection = false;
 
@@ -667,6 +668,8 @@ namespace HoudiniEngineUnity
         [SerializeField] private bool _bakeUpdateDeleteAllBakedData = false;
 
         [SerializeField] private bool _bakeToTheSceneFolder = false;
+
+        [SerializeField] private bool _bakeAddPrefabSuffix = true;
 
 
         // If false, pauses all cooking on this HDA until set back to true. Meant for unit testing use.
@@ -1046,7 +1049,8 @@ namespace HoudiniEngineUnity
 
             bool bWriteMeshesToAssetDatabase = true;
             bool bReconnectPrefabInstances = false;
-            GameObject newClonedRoot = CloneAssetWithoutHDA(ref bakedAssetPath, bWriteMeshesToAssetDatabase, bReconnectPrefabInstances);
+            GameObject newClonedRoot = CloneAssetWithoutHDA(ref bakedAssetPath, bWriteMeshesToAssetDatabase, bReconnectPrefabInstances,
+                preservePrefabOutputNames: true);
             if (newClonedRoot != null)
             {
                 try
@@ -1058,11 +1062,25 @@ namespace HoudiniEngineUnity
                     }
 
                     string cleanAssetName = HEU_AssetDatabase.MakeValidFileName(_assetName);
+                    if (_bakeAddPrefabSuffix && !cleanAssetName.EndsWith("_prefab", System.StringComparison.Ordinal))
+                        cleanAssetName += "_prefab";
                     string prefabPath = HEU_AssetDatabase.AppendPrefabPath(bakedAssetPath, cleanAssetName);
+                    if (_bakeAddPrefabSuffix)
+                        HEU_GeneralUtility.RenameGameObject(newClonedRoot, cleanAssetName);
                     ApplyBakedPrefabRootAttributes(newClonedRoot);
                     GameObject prefabGO = HEU_EditorUtility.SaveAsPrefabAsset(prefabPath, newClonedRoot);
                     if (prefabGO != null)
                     {
+                        HEU_HoudiniAssetRoot assetRoot = _rootGameObject.GetComponent<HEU_HoudiniAssetRoot>();
+                        if (assetRoot != null)
+                        {
+                            HEU_EditorUtility.UndoRecordObject(assetRoot, "Add Baked Prefab Target");
+                            if (assetRoot._bakeTargets == null)
+                                assetRoot._bakeTargets = new List<GameObject>();
+                            if (!assetRoot._bakeTargets.Contains(prefabGO))
+                                assetRoot._bakeTargets.Add(prefabGO);
+                            HEU_EditorUtility.SetObjectDirtyForEditorUpdate(assetRoot);
+                        }
                         HEU_EditorUtility.SelectObject(prefabGO);
 
                         InvokeBakedEvent(true, new List<GameObject>() { prefabGO }, true);
@@ -1138,9 +1156,18 @@ namespace HoudiniEngineUnity
                 _preAssetEvent.Invoke(new HEU_PreAssetEventData(this, HEU_AssetEventType.BAKE_UPDATE));
             }
 
+            // Capture the persistent destination before overwriting resources can reimport
+            // the prefab and invalidate the original loaded object reference.
+            string destinationPrefabPath = HEU_AssetDatabase.GetAssetPath(bakeTargetGO);
+            if (string.IsNullOrEmpty(destinationPrefabPath))
+            {
+                HEU_Logger.LogError("Unable to update prefab: target has no asset path.");
+                return false;
+            }
+
             // Locate the existing bake folder. Full cleanup is an explicit opt-in;
             // otherwise matching outputs are overwritten and other files are retained.
-            string existingPrefabFolder = HEU_AssetDatabase.GetAssetPath(bakeTargetGO);
+            string existingPrefabFolder = destinationPrefabPath;
             if (!string.IsNullOrEmpty(existingPrefabFolder))
             {
                 existingPrefabFolder = HEU_Platform.GetFolderPath(existingPrefabFolder);
@@ -1171,7 +1198,14 @@ namespace HoudiniEngineUnity
                 previousTransforms.ForEach((Transform trans) => { previousTransformValues.Add(new TransformData(trans)); });
             }
 
-            GameObject newClonedRoot = CloneAssetWithoutHDA(ref bakedAssetPath, bWriteMeshesToAssetDatabase, bReconnectPrefabInstances);
+            GameObject newClonedRoot = CloneAssetWithoutHDA(ref bakedAssetPath, bWriteMeshesToAssetDatabase, bReconnectPrefabInstances,
+                deferAssetDatabaseRefresh: true, preservePrefabOutputNames: true);
+            if (newClonedRoot == null)
+            {
+                HEU_Logger.LogError("Unable to update prefab: no output hierarchy was generated.");
+                InvokeBakedEvent(false, new List<GameObject>(), false);
+                return false;
+            }
             if (newClonedRoot != null)
             {
                 if (previousTransformValues != null)
@@ -1187,11 +1221,33 @@ namespace HoudiniEngineUnity
                         bakedAssetPath = HEU_AssetDatabase.CreateUniqueBakePath(_assetName);
                     }
 
-                    // Note using ReplacePrefabOptions.ReplaceNameBased will keep local transform values and other changes on instances.
                     ApplyBakedPrefabRootAttributes(newClonedRoot);
-                    HEU_EditorUtility.ReplacePrefab(newClonedRoot, bakeTargetGO, HEU_EditorUtility.HEU_ReplacePrefabOptions.ReplaceNameBased);
+                    // Serialize new meshes/materials before saving the prefab that references
+                    // them. Refresh only after the temporary hierarchy has been saved.
+                    HEU_AssetDatabase.SaveAssetDatabase();
+                    GameObject updatedPrefab = HEU_EditorUtility.SaveAsPrefabAsset(destinationPrefabPath, newClonedRoot);
+                    if (updatedPrefab == null)
+                    {
+                        HEU_Logger.LogErrorFormat("Unable to save updated prefab to {0}.", destinationPrefabPath);
+                        InvokeBakedEvent(false, new List<GameObject>(), false);
+                        return false;
+                    }
 
-                    InvokeBakedEvent(true, new List<GameObject>() { bakeTargetGO }, false);
+                    HEU_AssetDatabase.SaveAndRefreshDatabase();
+#if UNITY_EDITOR
+                    // Resource overwrites can leave the imported prefab holding stale references.
+                    // Reimport after saving all dependencies, matching a manual prefab Reimport.
+                    UnityEditor.AssetDatabase.ImportAsset(destinationPrefabPath,
+                        UnityEditor.ImportAssetOptions.ForceUpdate | UnityEditor.ImportAssetOptions.ForceSynchronousImport);
+                    updatedPrefab = UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(destinationPrefabPath);
+                    if (updatedPrefab == null)
+                    {
+                        HEU_Logger.LogErrorFormat("Unable to load updated prefab after reimport: {0}.", destinationPrefabPath);
+                        InvokeBakedEvent(false, new List<GameObject>(), false);
+                        return false;
+                    }
+#endif
+                    InvokeBakedEvent(true, new List<GameObject>() { updatedPrefab }, false);
                 }
                 finally
                 {
@@ -4286,7 +4342,8 @@ namespace HoudiniEngineUnity
         /// <param name="bakedAssetPath">Reference to the new clone's asset path, or empty if not filled in.</param>
         /// <param name="bWriteMeshesToAssetDatabase">Whether to write meshes to persistant storage (asset database)</param>
         /// <returns>The new gameobject containing the cloned data</returns>
-        private GameObject CloneAssetWithoutHDA(ref string bakedAssetPath, bool bWriteMeshesToAssetDatabase, bool bReconnectPrefabInstances)
+        private GameObject CloneAssetWithoutHDA(ref string bakedAssetPath, bool bWriteMeshesToAssetDatabase, bool bReconnectPrefabInstances,
+            bool deferAssetDatabaseRefresh = false, bool preservePrefabOutputNames = false)
         {
             GameObject newRoot = null;
 
@@ -4340,6 +4397,13 @@ namespace HoudiniEngineUnity
                     // In case of only 1 object being cloned, we'll set that as the newRoot
                     if (newChildGO != null)
                     {
+                        // Prefabs keep the cooked output name. Standalone updates still use
+                        // the baked-clone suffix to identify their corresponding parts.
+                        if (preservePrefabOutputNames && clonePart.OutputGameObject != null)
+                        {
+                            HEU_GeneralUtility.RenameGameObject(newChildGO, clonePart.OutputGameObject.name);
+                        }
+
                         if (newRoot == null)
                         {
                             newRoot = newChildGO;
@@ -4352,7 +4416,10 @@ namespace HoudiniEngineUnity
                     }
                 }
 
-                HEU_AssetDatabase.SaveAndRefreshDatabase();
+                if (deferAssetDatabaseRefresh)
+                    HEU_AssetDatabase.SaveAssetDatabase();
+                else
+                    HEU_AssetDatabase.SaveAndRefreshDatabase();
             }
 
             if (newRoot != null)
@@ -5395,6 +5462,8 @@ namespace HoudiniEngineUnity
             newAsset._showHDAOptions = this._showHDAOptions;
             newAsset._showGenerateSection = this._showGenerateSection;
             newAsset._showBakeSection = this._showBakeSection;
+            newAsset._bakeSectionDefaultApplied = this._bakeSectionDefaultApplied;
+            newAsset._bakeAddPrefabSuffix = this._bakeAddPrefabSuffix;
             newAsset._showEventsSection = this._showEventsSection;
             newAsset._showCurvesSection = this._showCurvesSection;
             newAsset._showInputNodesSection = this._showInputNodesSection;

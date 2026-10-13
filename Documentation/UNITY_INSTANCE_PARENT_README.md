@@ -1,19 +1,8 @@
-For the latest cumulative installation list and attribute rules, see ATTRIBUTE_COMPATIBILITY_README.md.
 
-For the current cumulative installation list, see UNITY_PATH_README.md.
 
 # unity_instance_parent: custom prefab instance hierarchy
 
 For the supplied Houdini Engine for Unity v2 source (Houdini 22.0.429).
-
-## Install
-
-Back up your plugin folder. Replace these existing files with the files in this archive, preserving their existing .meta files:
-
-- Scripts/Asset/HEU_PartData.cs
-- Scripts/Core/HEU_Defines.cs
-
-The archive also includes the rest of the original plugin, unchanged. Do not install a second copy alongside your existing plugin. Let Unity compile, then recook your HDA.
 
 ## Houdini setup
 
@@ -81,8 +70,7 @@ s@unity_instance_suffix = "_large";
 Result: `parent_A/parent_B/Oak_large`.
 With an empty name and a prefab named `Tree`, the result is `Tree_large`.
 
-Install: replace Scripts/Asset/HEU_PartData.cs and Scripts/Core/HEU_Defines.cs,
-then recook. This package includes the previous unity_instance_parent implementation.
+
 
 Unity checks: test name-only, suffix-only, both, empty strings, and different
 values on different points. Recook with changed values; bake nested groups and

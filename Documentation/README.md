@@ -1,6 +1,6 @@
 # Custom changes documentation
 
-For the custom Houdini Engine for Unity fork based on 22.0.459.
+For the custom Houdini Engine for Unity fork based on 22.0.466.
 
 - [CHANGELOG_AND_GUIDE.md](CHANGELOG_AND_GUIDE.md)
 - [UNITY_INSTANCE_PARENT_README.md](UNITY_INSTANCE_PARENT_README.md)
@@ -14,3 +14,9 @@ For the custom Houdini Engine for Unity fork based on 22.0.459.
 - [PREFAB_ROOT_ATTRIBUTES_README.md](PREFAB_ROOT_ATTRIBUTES_README.md)
 - [COMPONENT_PROFILES_README.md](COMPONENT_PROFILES_README.md)
 - [COMPONENT_PROFILE_BINDINGS_README.md](COMPONENT_PROFILE_BINDINGS_README.md)
+
+- [INPUT_DEFAULT_SLOT_README.md](INPUT_DEFAULT_SLOT_README.md)
+
+- [PROJECT_PREFAB_UPDATE_FIX.md](PROJECT_PREFAB_UPDATE_FIX.md)
+
+- [testing.md](testing.md)

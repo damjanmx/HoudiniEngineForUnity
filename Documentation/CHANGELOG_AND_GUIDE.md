@@ -2,9 +2,9 @@
 
 ## Changelog and usage documentation
 
-**Documentation date:** 7 October 2026  
-**Scope:** Custom output features and subsequent fixes, rename and defaults for Houdini 22.0.459.  
-**Status:** Earlier custom version reported working by the user. Reapplication to the clean, compilation-fixed baseline requires a fresh Unity check.
+**Documentation date:** 13 October 2026  
+**Scope:** Cumulative custom features and bake workflow updates for Houdini 22.0.466.  
+**Status:** User confirmed prefab output suffix removal and manual reimport recovery. Automatic reimport and newest Bake UI changes await Unity verification.
 
 Stage numbers below describe this project's changes; they are not official SideFX release numbers.
 
@@ -13,6 +13,23 @@ Stage numbers below describe this project's changes; they are not official SideF
 ---
 
 ## 1. Cumulative changelog
+
+### Bake workflow, prefab naming and update refresh — 13 October 2026
+
+- Removed automatically added `_bakedClone` from prefab output GameObject names while preserving source names and mesh `(Clone)` names.
+- Updated Project-prefab saving to save resources first and save the rebuilt hierarchy at its existing destination.
+- Added synchronous prefab reimport and reload after saving. The earlier save-order patch alone did not fix missing references; manual reimport did.
+- Expanded Bake by default, including a one-time expansion for existing HDAs.
+- Added successful new prefab bakes to the update target list without clearing existing targets or duplicating the same reference.
+- Added **Add _prefab Suffix**, default on, under Bake Options for new prefab filenames and root names.
+- Existing prefab updates retain their filenames; standalone update matching remains unchanged.
+- See [BAKE_UPDATE_README.md](BAKE_UPDATE_README.md), [PROJECT_PREFAB_UPDATE_FIX.md](PROJECT_PREFAB_UPDATE_FIX.md), and [testing.md](testing.md).
+
+### Official 22.0.466 merge — October 2026
+
+- Merged the official 22.0.466 baseline into the custom plugin, preserving custom features and existing metadata.
+- Earlier changelog entries retain their original version numbers as historical context.
+
 
 ### Component profile property bindings — 7 October 2026
 

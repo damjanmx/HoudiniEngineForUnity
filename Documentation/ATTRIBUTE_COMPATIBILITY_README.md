@@ -5,23 +5,6 @@ Packed-primitive support is described in PACKED_INSTANCES_README.md.
 This cumulative package includes unity_instance_parent, unity_instance_name,
 unity_instance_suffix, unity_path, and per-output attribute ownership.
 
-## Install
-
-Replace these existing files from the package:
-
-- Scripts/Asset/HEU_PartData.cs
-- Scripts/Asset/HEU_GeoNode.cs
-- Scripts/Asset/HEU_GeneratedOutput.cs
-- Scripts/Core/HEU_Defines.cs
-- Scripts/Utility/HEU_GenerateGeoCache.cs
-
-Add this new helper AND its supplied .meta file:
-
-- Scripts/Utility/HEU_OutputAttributeScope.cs
-
-Let Unity recompile, then rebuild the HDA once to populate the new ownership
-records on assets cooked with the older patch. Subsequent changes use Recook.
-
 ## Ownership rules
 
 Each unity_path mesh retains its original primitive, point, and vertex indices.

@@ -1,6 +1,6 @@
 # Houdini Engine for Unity — Custom Fork
 
-Customizations maintained by Nikola Damjanov, based on SideFX Houdini Engine for Unity **22.0.459**. Development branch: `custom/houdini22.0`. The official installer baseline is recorded as `baseline/houdini-22.0.459`.
+Customizations maintained by Nikola Damjanov, based on SideFX Houdini Engine for Unity **22.0.466**. Development branch: `custom/houdini22.0`. The earlier 22.0.459 baseline is recorded as `baseline/houdini-22.0.459`; the current plugin includes the official 22.0.466 update.
 
 ## Changes and usage
 
@@ -60,6 +60,16 @@ Use detail strings `unity_layer_root` to assign a layer to the baked root and al
 
 Enable **Bake To The Scene Folder** to create new prefabs and their generated resource folders under `HdaBakedData` beside the active saved scene. It defaults to off. **Delete All Baked Folders** controls cleanup when updating an existing prefab; existing targets continue to update in place. See [bake settings](Documentation/BAKE_UPDATE_README.md).
 
+## Bake workflow and prefab names
+
+The **Bake** section opens expanded by default, including once for existing HDAs. You can still collapse it afterward. A successful new prefab bake automatically appends that prefab to the HDA's update target list, preserving existing entries. Review the list before updating multiple baked variants.
+
+Under **Bake Options**, **Add _prefab Suffix** defaults to **on**. New prefab filenames and root names receive `_prefab`; an existing exact suffix is not doubled. Turning it off restores the previous naming behavior. The setting persists, and changing it does not rename previously baked prefabs.
+
+Prefab output GameObjects retain their cooked names without an added `_bakedClone`. Mesh `(Clone)` names remain unchanged. The top-level prefab root follows the prefab naming convention.
+
+Updating a Project prefab now saves its resources and prefab, then forces a synchronous prefab reimport and reload. Manual reimport was confirmed to restore missing mesh/material references; the automatic version still needs Unity verification. See [bake settings and naming](Documentation/BAKE_UPDATE_README.md) and [prefab update details](Documentation/PROJECT_PREFAB_UPDATE_FIX.md).
+
 ## Changed defaults
 
 | Setting | Custom default |
@@ -67,6 +77,8 @@ Enable **Bake To The Scene Folder** to create new prefabs and their generated re
 | Generate Tangents | Off (`false`) |
 | Generate Mesh Using Points | On (`true`) |
 | Spline Sampling Resolution | `12.0` |
+| Bake foldout | Expanded |
+| Add _prefab Suffix | On |
 
 These defaults apply to newly created instances. Existing serialized assets and components retain their saved values.
 
@@ -77,7 +89,7 @@ Custom documentation is collected in [Documentation](Documentation/). See the [f
 - `unity_path` support targets regular HDA mesh generation; terrain, curves, PDG and GeoSync are outside this extension's scope.
 - Generated path hierarchies are rebuilt on recook. Manual edits to generated children and material overrides may not persist.
 - The integration is not yet fully opt-in: some instancer processing differs from upstream even when custom attributes are absent.
-- Source syntax and merge checks have been performed. The earlier custom version was reported working in Unity. This restoration preserves that implementation; recheck compilation, cooking and baking after applying it.
+- Source syntax and merge checks have been performed. The earlier custom version was reported working in Unity. Recent prefab naming was confirmed by the user; automatic reimport and the latest Bake UI options await Unity verification.
 
 This is an independent customization of SideFX's plugin. SideFX's original documentation and attribution follow below.
 

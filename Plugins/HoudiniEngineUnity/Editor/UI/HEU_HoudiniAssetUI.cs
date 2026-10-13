@@ -798,6 +798,13 @@ namespace HoudiniEngineUnity
             HEU_EditorUI.BeginSection();
             {
                 SerializedProperty showBakeProperty = assetObject.FindProperty("_showBakeSection");
+                // Expand once for existing assets too, then respect the user's foldout choice.
+                SerializedProperty bakeDefaultApplied = assetObject.FindProperty("_bakeSectionDefaultApplied");
+                if (!bakeDefaultApplied.boolValue)
+                {
+                    showBakeProperty.boolValue = true;
+                    bakeDefaultApplied.boolValue = true;
+                }
 
                 showBakeProperty.boolValue = HEU_EditorUI.DrawFoldOut(showBakeProperty.boolValue, "BAKE");
                 if (showBakeProperty.boolValue)
@@ -816,7 +823,9 @@ namespace HoudiniEngineUnity
                         if (GUILayout.Button(_bakeprefabContent, _mainButtonStyle))
                         {
                             assetObject.ApplyModifiedProperties();
+                            assetRootSerializedObject.ApplyModifiedProperties();
                             asset.BakeToNewPrefab();
+                            assetRootSerializedObject.Update();
                         }
                     }
 
@@ -886,6 +895,9 @@ namespace HoudiniEngineUnity
                         HEU_EditorUI.EndSimpleSection();
 
                         HEU_EditorUI.BeginSimpleSection("Bake Options");
+                        HEU_EditorUI.DrawPropertyField(assetObject, "_bakeAddPrefabSuffix",
+                            "Add _prefab Suffix",
+                            "Append _prefab to new baked prefab names. Existing prefab targets keep their current filename.");
                         HEU_EditorUI.DrawPropertyField(assetObject, "_bakeToTheSceneFolder",
                             "Bake To The Scene Folder",
                             "New prefabs only. Save the prefab and its resource folders under HdaBakedData beside the saved active scene. Existing prefab targets are updated in place.");

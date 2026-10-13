@@ -1,4 +1,3 @@
-For the latest cumulative installation list and attribute rules, see ATTRIBUTE_COMPATIBILITY_README.md.
 
 # unity_path: primitive mesh names and hierarchy
 
@@ -32,16 +31,4 @@ Collision and LOD groups are filtered per path and use the existing generators.
 - Generated path objects are rebuilt on recook. Set materials and transforms in
   Houdini; manual child edits and material overrides are not preserved by this
   path-generation branch.
-
-## Install
-
-Replace these FOUR files from this cumulative package:
-
-- Scripts/Asset/HEU_PartData.cs
-- Scripts/Asset/HEU_GeneratedOutput.cs
-- Scripts/Core/HEU_Defines.cs
-- Scripts/Utility/HEU_GenerateGeoCache.cs
-
-Earlier unity_instance_parent, unity_instance_name, and unity_instance_suffix changes
-are included. Recook after replacing the files.
 
