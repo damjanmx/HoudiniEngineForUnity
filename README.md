@@ -48,6 +48,8 @@ Drag several Project assets onto a multiparm’s **Drop assets here to add entri
 
 ## Component profiles
 
+The latest fix corrects serialized-property iteration that could leave newly added components at default values and log `Invalid iteration`. Retest existing outputs using **Overwrite Settings**; see the profile guide for checks.
+
 Create **Houdini Engine > Component Profile** assets from a template prefab and select configured root components to copy. Reference them with `unity_component_profile` for individual outputs or detail `unity_component_profile_root` for the baked prefab root. Profiles support keeping existing settings or overwriting them, with component-reference remapping. See [setup, usage and limitations](Documentation/COMPONENT_PROFILES_README.md).
 
 Profiles also provide **Attribute Bindings**: select a component property and bind a `unity_cp_` Houdini attribute to it. Values follow each output’s attribute scope; root bindings read detail only. See [binding usage and supported types](Documentation/COMPONENT_PROFILE_BINDINGS_README.md).
@@ -69,6 +71,10 @@ Under **Bake Options**, **Add _prefab Suffix** defaults to **on**. New prefab fi
 Prefab output GameObjects retain their cooked names without an added `_bakedClone`. Mesh `(Clone)` names remain unchanged. The top-level prefab root follows the prefab naming convention.
 
 Updating a Project prefab now saves its resources and prefab, then forces a synchronous prefab reimport and reload. Manual reimport was confirmed to restore missing mesh/material references; the automatic version still needs Unity verification. See [bake settings and naming](Documentation/BAKE_UPDATE_README.md) and [prefab update details](Documentation/PROJECT_PREFAB_UPDATE_FIX.md).
+
+## Input defaults
+
+Input Nodes start with one slot. New **Instance Inputs** override lists start empty; generated instances use their HDA source until an override is added manually. Existing saved overrides are preserved. See [input defaults](Documentation/INPUT_DEFAULT_SLOT_README.md).
 
 ## Changed defaults
 

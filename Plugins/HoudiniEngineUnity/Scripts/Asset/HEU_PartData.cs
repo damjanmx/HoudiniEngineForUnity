@@ -2982,9 +2982,8 @@ namespace HoudiniEngineUnity
             newInfo._instancedObjectNodeID = instancedObjectNodeID;
             newInfo._instancedObjectPath = instancedObjectPath;
 
-            HEU_InstancedInput input = new HEU_InstancedInput();
-            input._instancedGameObject = instancedObject;
-            newInfo._instancedInputs.Add(input);
+            // Instance Inputs are optional overrides. Leave new lists empty so
+            // generation uses the original source until the user adds an override.
 
             _objectInstanceInfos.Add(newInfo);
             return newInfo;

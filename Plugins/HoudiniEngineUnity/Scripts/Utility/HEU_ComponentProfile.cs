@@ -154,9 +154,12 @@ namespace HoudiniEngineUnity
                     {
                         SerializedObject source = new SerializedObject(copySources[component]);
                         SerializedProperty property = source.GetIterator();
-                        // Copy top-level serialized fields including arrays and hidden fields.
-                        while (property.Next(false))
+                        // Enter the iterator root once, then copy top-level fields.
+                        // Arrays and nested values are copied with their containing property.
+                        bool enterChildren = true;
+                        while (property.Next(enterChildren))
                         {
+                            enterChildren = false;
                             if (IsUserProperty(property.propertyPath)) output.CopyFromSerializedProperty(property);
                         }
                     }

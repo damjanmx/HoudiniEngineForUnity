@@ -14,6 +14,18 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Component profile settings copy — 13 October 2026
+
+- Fixed initial serialized-property iteration so template settings can be copied after adding components.
+- Preserved top-level copying, nested reference remapping and attribute-binding order.
+- See [COMPONENT_PROFILES_README.md](COMPONENT_PROFILES_README.md) for the test 20 regression procedure. Unity retest pending.
+
+### Instance override defaults — 13 October 2026
+
+- New Instance Inputs override lists start empty instead of automatically adding the source object.
+- Input Nodes retain their default single slot. Existing saved overrides are preserved.
+- See [INPUT_DEFAULT_SLOT_README.md](INPUT_DEFAULT_SLOT_README.md).
+
 ### Bake workflow, prefab naming and update refresh — 13 October 2026
 
 - Removed automatically added `_bakedClone` from prefab output GameObject names while preserving source names and mesh `(Clone)` names.

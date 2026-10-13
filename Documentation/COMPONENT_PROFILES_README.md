@@ -79,3 +79,22 @@ Source syntax and integration checks passed; Unity compilation and live cook/bak
 ## Attribute-driven property values
 
 Profiles now support **Attribute Bindings** with required `unity_cp_` names. Use the component/property pickers to connect scoped Houdini attributes to serialized Unity values. See [COMPONENT_PROFILE_BINDINGS_README.md](COMPONENT_PROFILE_BINDINGS_README.md) for setup, types, arrays and root bindings.
+
+
+## Serialized settings copy fix — 13 October 2026
+
+Fixed the `Invalid iteration` error when applying a component profile. The copier previously called `Next(false)` on a fresh SerializedProperty iterator. It now enters the first property with `Next(true)`, then advances across top-level fields with `Next(false)`. Nested values and arrays are copied with their containing property; the existing recursive reference-remapping traversal is retained.
+
+This addresses components being added with default values rather than the template settings. It applies to the shared profile application path used during cooking and baking. Existing-component policy and attribute-binding precedence are unchanged.
+
+### Retest with 20_profiles
+
+1. Set the profile to Overwrite Settings so components already created with defaults are refreshed.
+2. Temporarily disable the unity_cp_mass attribute in the HDA to isolate template copying.
+3. Set template Rigidbody Mass to 3 and Use Gravity off, save the template, then recook.
+4. Confirm all three generated Rigidbodies have Mass 3 and Use Gravity off, with no new Invalid iteration error.
+5. Re-enable unity_cp_mass with a binding to Rigidbody mass: expect 2, 7 and 12, while Use Gravity stays off.
+6. Recook again, bake a new prefab, then update it. Check values and absence of duplicate components.
+7. Check a custom script with nested/array values and component references to verify copying and remapping still work.
+
+Source review confirms the other profile iterator loops already start with Next(true). Unity compilation and live execution remain to be verified in the user's project. Keep Existing intentionally preserves existing component settings; use Overwrite Settings or a fresh output when retesting this fix.
