@@ -35,7 +35,7 @@ Stage numbers below describe this project's changes; they are not official SideF
 - Added successful new prefab bakes to the update target list without clearing existing targets or duplicating the same reference.
 - Added **Add _prefab Suffix**, default on, under Bake Options for new prefab filenames and root names.
 - Existing prefab updates retain their filenames; standalone update matching remains unchanged.
-- See [BAKE_UPDATE_README.md](BAKE_UPDATE_README.md), [PROJECT_PREFAB_UPDATE_FIX.md](PROJECT_PREFAB_UPDATE_FIX.md), and [testing.md](testing.md).
+- See [BAKE_UPDATE_README.md](BAKE_UPDATE_README.md), [PROJECT_PREFAB_UPDATE_FIX.md](PROJECT_PREFAB_UPDATE_FIX.md), and [TESTING.md](TESTING.md).
 
 ### Official 22.0.466 merge — October 2026
 

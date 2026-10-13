@@ -19,4 +19,4 @@ For the custom Houdini Engine for Unity fork based on 22.0.466.
 
 - [PROJECT_PREFAB_UPDATE_FIX.md](PROJECT_PREFAB_UPDATE_FIX.md)
 
-- [testing.md](testing.md)
+- [TESTING.md](TESTING.md)

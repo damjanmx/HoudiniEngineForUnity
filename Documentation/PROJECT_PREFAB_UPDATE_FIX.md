@@ -22,4 +22,4 @@ The cumulative source also preserves cooked prefab output names without adding `
 
 ## Verification
 
-Use 01_baseline_mesh, bake a prefab, change its geometry, and update using the Project prefab target. Repeat without manual Reimport. Check MeshFilter, renderer and collider references, then reopen the scene/editor. Repeat with a scene instance and both resource-cleanup modes in disposable test folders. See [testing.md](testing.md) for the checklist.
+Use 01_baseline_mesh, bake a prefab, change its geometry, and update using the Project prefab target. Repeat without manual Reimport. Check MeshFilter, renderer and collider references, then reopen the scene/editor. Repeat with a scene instance and both resource-cleanup modes in disposable test folders. See [TESTING.md](TESTING.md) for the checklist.
