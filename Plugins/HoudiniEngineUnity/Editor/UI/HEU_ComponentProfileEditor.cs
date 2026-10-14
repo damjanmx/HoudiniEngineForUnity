@@ -18,6 +18,17 @@ namespace HoudiniEngineUnity
             {
                 components.ClearArray();
                 serializedObject.FindProperty("AttributeBindings").ClearArray();
+                GameObject assignedPrefab = template.objectReferenceValue as GameObject;
+                if (assignedPrefab != null && PrefabUtility.IsPartOfPrefabAsset(assignedPrefab)
+                    && assignedPrefab.transform.parent == null)
+                {
+                    foreach (Component component in assignedPrefab.GetComponents<Component>())
+                    {
+                        if (component == null || !HEU_ComponentProfile.IsSupported(component.GetType())) continue;
+                        int index = components.arraySize++;
+                        components.GetArrayElementAtIndex(index).objectReferenceValue = component;
+                    }
+                }
             }
             EditorGUILayout.PropertyField(serializedObject.FindProperty("ExistingComponents"), new GUIContent("Existing Components"));
             GameObject prefab = template.objectReferenceValue as GameObject;

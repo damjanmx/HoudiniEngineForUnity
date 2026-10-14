@@ -373,3 +373,14 @@ This behavior is exclusive to the Inspector's Bake Prefab button. Update Prefab,
 - Undo scene changes: instance is removed and HDA activity restored; saved asset remains.
 
 Source checks completed; Unity runtime verification is required for this new behavior.
+
+
+## Automatic component selection — 14 October 2026
+
+Assigning or changing Template Prefab automatically selects every supported component on that prefab's root. Protected component types and missing-script entries are skipped. Components on children are not selected. You can untick components afterward; inspector redraws and reselection do not re-enable them.
+
+Clearing the template clears the component selection. Changing the template still clears attribute bindings, since they refer to the previous template's components. Existing profiles retain their saved selection until you change the template. To apply auto-selection to an existing profile, clear and reassign its template (this also clears its bindings).
+
+Existing validation still applies: unsupported dependencies and references to template children or unselected components can produce a warning. Automatic selection does not bypass those checks.
+
+Verification: assign a prefab containing Rigidbody, AudioSource, a custom script, Transform and geometry components; confirm only supported root components are checked. Untick one, reselect the profile, and verify it stays unchecked. Change templates and verify selection replacement and binding reset. Clear the template and verify the list empties. Recook a profile-driven HDA and verify selected components are applied. Unity validation is pending.

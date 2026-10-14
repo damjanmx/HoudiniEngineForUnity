@@ -14,6 +14,13 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Profile component auto-selection — 14 October 2026
+
+- Assigning a template prefab selects all supported root components automatically.
+- Manual deselections persist; protected components remain excluded.
+- Template changes continue to clear old bindings. Existing profiles are not modified until their template changes.
+- See [COMPONENT_PROFILES_README.md](COMPONENT_PROFILES_README.md).
+
 ### Add baked prefab to scene — 13 October 2026
 
 - Added Add Prefab To Scene, default on, below Add _prefab Suffix.

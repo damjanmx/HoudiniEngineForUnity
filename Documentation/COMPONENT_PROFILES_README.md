@@ -6,10 +6,10 @@
 2. Save it as a prefab, such as `Assets/HDAProfiles/InteractivePropTemplate.prefab`.
 3. In the Project window, choose **Create > Houdini Engine > Component Profile**. Save it as `Assets/HDAProfiles/InteractiveProp.asset`.
 4. Assign **Template Prefab** in the profile Inspector.
-5. Under **Components to Copy**, tick the components to include. Select any other root components that those components reference.
+5. Under **Components to Copy**, all supported root components are selected automatically when you assign a template. Untick any components you do not want; keep referenced root components selected.
 6. Choose **Existing Components**: **Overwrite Settings** (default for new profiles) or **Keep Existing**. Existing saved profiles retain their selected mode.
 
-The Inspector reports invalid selections and unsupported template references. Changing the template clears the selection. The template prefab must remain available while cooking and baking.
+The Inspector reports invalid selections and unsupported template references. Changing the template replaces the selection with all supported components on the new template root and clears the old attribute bindings. The template prefab must remain available while cooking and baking.
 
 ## Reference it from Houdini
 
@@ -98,3 +98,14 @@ This addresses components being added with default values rather than the templa
 7. Check a custom script with nested/array values and component references to verify copying and remapping still work.
 
 Source review confirms the other profile iterator loops already start with Next(true). Unity compilation and live execution remain to be verified in the user's project. Keep Existing intentionally preserves existing component settings; use Overwrite Settings or a fresh output when retesting this fix.
+
+
+## Automatic component selection — 14 October 2026
+
+Assigning or changing Template Prefab automatically selects every supported component on that prefab's root. Protected component types and missing-script entries are skipped. Components on children are not selected. You can untick components afterward; inspector redraws and reselection do not re-enable them.
+
+Clearing the template clears the component selection. Changing the template still clears attribute bindings, since they refer to the previous template's components. Existing profiles retain their saved selection until you change the template. To apply auto-selection to an existing profile, clear and reassign its template (this also clears its bindings).
+
+Existing validation still applies: unsupported dependencies and references to template children or unselected components can produce a warning. Automatic selection does not bypass those checks.
+
+Verification: assign a prefab containing Rigidbody, AudioSource, a custom script, Transform and geometry components; confirm only supported root components are checked. Untick one, reselect the profile, and verify it stays unchecked. Change templates and verify selection replacement and binding reset. Clear the template and verify the list empties. Recook a profile-driven HDA and verify selected components are applied. Unity validation is pending.

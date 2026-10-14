@@ -48,6 +48,8 @@ Drag several Project assets onto a multiparm’s **Drop assets here to add entri
 
 ## Component profiles
 
+Assigning a template prefab automatically selects all supported root components. Untick any you do not need; protected geometry components remain excluded.
+
 Template component settings are copied during cooking and baking, including nested serialized values. The serialized-property iteration issue found during testing has been fixed.
 
 Create **Houdini Engine > Component Profile** assets from a template prefab and select configured root components to copy. Reference them with `unity_component_profile` for individual outputs or detail `unity_component_profile_root` for the baked prefab root. Profiles default to **Overwrite Settings**; **Keep Existing** preserves settings on components already present while adding missing ones. Component references are remapped to the generated counterparts. See [setup, usage and limitations](Documentation/COMPONENT_PROFILES_README.md).
