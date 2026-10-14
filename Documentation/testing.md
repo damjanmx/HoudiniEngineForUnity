@@ -384,3 +384,10 @@ Clearing the template clears the component selection. Changing the template stil
 Existing validation still applies: unsupported dependencies and references to template children or unselected components can produce a warning. Automatic selection does not bypass those checks.
 
 Verification: assign a prefab containing Rigidbody, AudioSource, a custom script, Transform and geometry components; confirm only supported root components are checked. Untick one, reselect the profile, and verify it stays unchecked. Change templates and verify selection replacement and binding reset. Clear the template and verify the list empties. Recook a profile-driven HDA and verify selected components are applied. Unity validation is pending.
+
+
+## Build dependency fix — 14 October 2026
+
+Removed the unused, unguarded `using Codice.CM.Common;` import from `Scripts/Core/HEU_AssetDatabase.cs`. It caused CS0246 when the Codice namespace was unavailable during a player build. No code in the file uses that namespace, so no replacement dependency is needed. Asset database and bake behavior are unchanged.
+
+Verification: allow editor compilation to finish, then repeat the player build that reported CS0246. Also verify the plugin compiles in a project without the optional version-control package. The unused import was removed and remaining plugin source checked for Codice references; an actual Unity build was not available here.

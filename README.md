@@ -96,6 +96,8 @@ Generation defaults apply to newly created instances; existing saved values rema
 
 ## Unity compatibility
 
+Removed an unused Codice namespace import that caused player-build compilation failures when that optional version-control dependency was unavailable.
+
 Assembly discovery uses `UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies()` on Unity 6.6 or newer, with `AppDomain.CurrentDomain.GetAssemblies()` retained for earlier versions.
 
 ## Documentation and current limitations

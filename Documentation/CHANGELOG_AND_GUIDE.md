@@ -14,6 +14,11 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Player-build import fix — 14 October 2026
+
+- Removed an unused Codice namespace import from HEU_AssetDatabase.cs that caused CS0246 during builds.
+- No runtime or bake behavior changed; no additional package is required.
+
 ### Profile component auto-selection — 14 October 2026
 
 - Assigning a template prefab selects all supported root components automatically.

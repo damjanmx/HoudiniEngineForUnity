@@ -30,7 +30,6 @@ using System.IO;
 using UnityEngine;
 using System.Text.RegularExpressions;
 
-using Codice.CM.Common;
 
 #if UNITY_EDITOR
 using UnityEditor;
