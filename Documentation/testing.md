@@ -391,3 +391,8 @@ Verification: assign a prefab containing Rigidbody, AudioSource, a custom script
 Removed the unused, unguarded `using Codice.CM.Common;` import from `Scripts/Core/HEU_AssetDatabase.cs`. It caused CS0246 when the Codice namespace was unavailable during a player build. No code in the file uses that namespace, so no replacement dependency is needed. Asset database and bake behavior are unchanged.
 
 Verification: allow editor compilation to finish, then repeat the player build that reported CS0246. Also verify the plugin compiles in a project without the optional version-control package. The unused import was removed and remaining plugin source checked for Codice references; an actual Unity build was not available here.
+
+
+## Player-build namespace regression
+
+Repeat the player build after qualifying System.StringSplitOptions in HEU_HoudiniAsset. Verify CS0103 and the preceding Codice CS0246 are absent. Actual Unity build verification remains pending.

@@ -2453,7 +2453,7 @@ namespace HoudiniEngineUnity
             if (realName.Contains("::"))
             {
                 string[] versionDelimiter = new string[]{"::"};
-                string[] splitName = realName.Split(versionDelimiter, StringSplitOptions.RemoveEmptyEntries);
+                string[] splitName = realName.Split(versionDelimiter, System.StringSplitOptions.RemoveEmptyEntries);
                 if(splitName.Length == 2)
                 {
                     // name::version

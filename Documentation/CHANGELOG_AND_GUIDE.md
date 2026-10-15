@@ -14,6 +14,12 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Player-build namespace fix — 14 October 2026
+
+- Qualified System.StringSplitOptions in HEU_HoudiniAsset so non-editor compilation does not depend on an editor-only System import.
+- Includes the preceding unused Codice import removal.
+- Naming logic is unchanged. Repeat the player build to verify.
+
 ### Player-build import fix — 14 October 2026
 
 - Removed an unused Codice namespace import from HEU_AssetDatabase.cs that caused CS0246 during builds.
