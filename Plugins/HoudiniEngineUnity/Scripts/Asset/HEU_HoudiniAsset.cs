@@ -908,8 +908,6 @@ namespace HoudiniEngineUnity
         /// <inheritdoc />
         public GameObject DuplicateAsset(GameObject newRootGameObject = null)
         {
-            string goName = _rootGameObject.name + "_copy";
-
             bool bBuildAsync = false;
             HEU_SessionBase session = GetAssetSession(true);
             Transform thisParentTransform = _rootGameObject.transform.parent;
@@ -960,17 +958,16 @@ namespace HoudiniEngineUnity
                 HEU_Logger.LogError("Duplicate is incomplete. See the preceding cook error.");
                 return newRootGameObject;
             }
-            newRootGameObject.name = goName;
+            // Use the same base name as BakeToNewPrefab.
+            newRootGameObject.name = newAsset._assetName;
             newRootGameObject.layer = _rootGameObject.layer;
             newRootGameObject.tag = _rootGameObject.tag;
 #if UNITY_EDITOR
             UnityEditor.GameObjectUtility.SetStaticEditorFlags(newRootGameObject,
                 UnityEditor.GameObjectUtility.GetStaticEditorFlags(_rootGameObject));
 #endif
-            HEU_HoudiniAssetRoot sourceRoot = _rootGameObject.GetComponent<HEU_HoudiniAssetRoot>();
-            if (sourceRoot != null)
-                newRoot._bakeTargets = sourceRoot._bakeTargets != null
-                    ? new List<GameObject>(sourceRoot._bakeTargets) : new List<GameObject>();
+            // A duplicate must not update the source HDA's previously baked objects.
+            newRoot._bakeTargets = new List<GameObject>();
 #if UNITY_EDITOR
             foreach (Component component in _rootGameObject.GetComponents<Component>())
             {
@@ -5518,14 +5515,24 @@ namespace HoudiniEngineUnity
             newAsset._curveFrameSelectedNodes = this._curveFrameSelectedNodes;
             newAsset._curveFrameSelectedNodeDistance = this._curveFrameSelectedNodeDistance;
 
-            // Apply the preset without uploading the destination's default parameter values.
-            // Regenerate multiparm/ramp parameters and their input nodes before matching inputs.
-            if (!newAsset.RecookBlocking(false, true, false, true, false, false)
-                || newAsset._lastCookResult != AssetCookResult.SUCCESS)
+            // A preset restores the parameter layout without a geometry cook. Cooking here
+            // would evaluate required inputs before their assignments have been copied.
+            HEU_SessionBase duplicateSession = newAsset.GetAssetSession(false);
+            byte[] duplicatePreset = newAsset.Parameters != null ? newAsset.Parameters.GetPresetData() : null;
+            if (duplicateSession == null || duplicatePreset == null || duplicatePreset.Length == 0
+                || !duplicateSession.SetPreset(newAsset._assetID, duplicatePreset)
+                || !duplicateSession.GetNodeInfo(newAsset._assetID, ref newAsset._nodeInfo))
             {
-                HEU_Logger.LogError("Duplicate: unable to restore parameter layout.");
+                HEU_Logger.LogError("Duplicate: unable to apply the parameter preset or read its layout.");
                 return false;
             }
+            newAsset.GenerateParameters(duplicateSession);
+            if (newAsset.Parameters == null || !newAsset.Parameters.AreParametersValid())
+            {
+                HEU_Logger.LogError("Duplicate: unable to generate parameters from the restored preset.");
+                return false;
+            }
+            newAsset.Parameters.DownloadPresetData(duplicateSession);
 
             // Set parameter preset for curves
             // The curve names for the new asset might be different than that of the old one for reasons

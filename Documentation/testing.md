@@ -407,10 +407,28 @@ Status: not yet verified in Unity. Use the inspector Duplicate button.
 3. Input Nodes: assign multiple objects, including an empty slot, with non-default offsets, packing and world-transform options. Check duplicates work immediately, after recook and after scene save/reopen. Test a connected HDA/curve input and confirm it cooks independently after changing the upstream HDA.
 4. Input settings: change Export Colliders, tilemap options and spline sampling resolution. Duplicate, compare settings, then edit only the duplicate and confirm the original settings do not change.
 5. Instance Inputs: set multiple overrides with rotation/scale offsets. Duplicate and compare lists and generated instances. Repeat with no overrides: the list must remain empty. Change the duplicate's list and verify the source list is unchanged.
-6. Bake options: set every bake toggle to non-default values and add several bake targets. Duplicate and compare all toggles/targets. Remove a target only from the duplicate; the source list must remain intact. Both initially refer to the same prefab assets.
+6. Bake options: set every bake toggle to non-default values and add several bake targets. Duplicate and compare toggle values. The duplicate target list must be empty and the original list unchanged. Bake a new prefab from the duplicate: only its own new prefab should be added to its list. Repeat duplication from this HDA; the next duplicate must again start with no targets.
 7. Curves/editable/terrain: edit curve points and curve settings, paint editable attributes, change terrain settings and material overrides; duplicate and compare. Recook both independently.
 8. Root/options: verify tag, layer, static flags, root components, generation/cooking/handle settings, serialized event listeners and foldouts. Changing the duplicate's event list must not change the source's list. Verify source connection callbacks are not spuriously copied.
 9. Multiple definitions/scenes: duplicate a non-first definition in a multi-definition HDA library; it must retain that definition without prompting. Duplicate an unparented HDA in a loaded non-active scene and verify scene placement.
 10. Regression: cook a fresh HDA, bake a prefab, update a Project prefab and build a player. Confirm the previous namespace fixes remain and the earlier feature tests still pass.
 
 Compare configured state and deterministic outputs, not session node IDs or cache paths. Runtime state, arbitrary extra children and remapping references in custom components are outside this feature's scope.
+
+
+### Duplicate input-order regression (16 October 2026)
+
+- Use the HDA that reported the parameter-layout error, with all required input slots populated. Duplicate it. Confirm there is no parameter-layout failure and compare parameters, input assignments and geometry.
+- Repeat with non-default multiparm counts and populated parameter inputs inside multiple multiparms. Confirm each reference reaches the matching parameter.
+- Change a parameter/input only on the duplicate, recook, and confirm the original remains unchanged.
+- Check a simple HDA without inputs and repeat scene save/reopen. Verify both assets cook independently.
+- A genuine invalid-input or HDA cook error must still be reported; the correction must not silently accept an incomplete result.
+
+Not yet executed in Unity/Houdini.
+
+
+### Duplicate naming regression (16 October 2026)
+
+Duplicate the golf-course HDA again. Its root should use its own generated asset name without `_copy`. Bake it with the `_gravity` asset-name suffix and Add _prefab Suffix enabled: the prefab should use that same base plus `_gravity_prefab`. Repeat with Add _prefab Suffix off. Check existing HDAs/prefabs retain their names and duplicate parameter/input values still match the source. The generated number need not be consecutive.
+
+Unity verification pending.

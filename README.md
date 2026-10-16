@@ -4,7 +4,11 @@ Customizations maintained by Nikola Damjanov, based on SideFX Houdini Engine for
 
 ## Duplicate HDA
 
-The inspector **Duplicate** button now restores current parameters, multiparm input layout, input references and offsets, input settings, instance overrides and the custom bake options. The duplicate keeps the source transform and parent, with its own Houdini connections and editable lists. Referenced input objects and bake targets remain shared references. See [Duplicate HDA documentation](Documentation/DUPLICATE_HDA_README.md) for scope and testing.
+New duplicates use their own generated asset name (for example `golf_course_zone_1_7`), so their scene name and baked prefab base name agree. The old `_copy` naming override is removed.
+
+The 16 October correction restores the parameter layout without cooking before the input assignments are copied. This addresses the premature parameter-layout cook failure in the first duplication patch. Unity retesting is pending.
+
+The inspector **Duplicate** button now restores current parameters, multiparm input layout, input references and offsets, input settings, instance overrides and the custom bake options. The duplicate keeps the source transform and parent, with its own Houdini connections and editable lists. Referenced input objects remain shared references. The duplicate starts with an empty bake target list; the original HDA retains its targets. See [Duplicate HDA documentation](Documentation/DUPLICATE_HDA_README.md) for scope and testing.
 
 ## Changes and usage
 

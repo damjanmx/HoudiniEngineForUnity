@@ -130,3 +130,7 @@ This behavior is exclusive to the Inspector's Bake Prefab button. Update Prefab,
 - Undo scene changes: instance is removed and HDA activity restored; saved asset remains.
 
 Source checks completed; Unity runtime verification is required for this new behavior.
+
+### Duplicating an HDA
+
+A new duplicate starts with no bake targets. Its bake option values are copied, but it is not linked to the original HDA's baked prefabs or GameObjects. Bake a new prefab to populate the duplicate's own list. Existing HDAs and their lists are unchanged.

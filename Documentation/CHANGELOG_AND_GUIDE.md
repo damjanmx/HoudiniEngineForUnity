@@ -14,6 +14,29 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Empty bake targets on duplication — 16 October 2026
+
+New duplicates start with an empty **Drag & drop GameObjects / Prefabs** list. All copied bake option values remain intact. The original HDA's target list is untouched; a successful new prefab bake from the duplicate populates its own list normally. This supersedes the initial duplication patch's target-list copying. Existing duplicates are not cleared retroactively.
+
+Source and package checks passed; Unity verification pending.
+
+
+### Consistent duplicate names — 16 October 2026
+
+New duplicates use their own generated Houdini asset name for the scene root instead of the original name plus `_copy`. For example, a duplicate named `golf_course_zone_1_7` bakes as `golf_course_zone_1_7_gravity_prefab` when the custom asset-name suffix is `_gravity` and Add _prefab Suffix is enabled. The generated number is assigned by Houdini, not forced to the next integer by this patch.
+
+This affects new duplicates only. Existing scene objects and prefab files are not renamed. Parameter/input copying and bake naming rules are unchanged. Source checks completed; Unity verification pending.
+
+
+### Duplicate input-order fix — 16 October 2026
+
+The previous duplication patch cooked the HDA to restore its parameter layout before assigning the duplicate's inputs. That could stop duplication with `Duplicate: unable to restore parameter layout`, followed by `Duplicate is incomplete`.
+
+The layout is now restored directly from the parameter preset, with refreshed node information and parameter input controls. Input assignments are copied before the next geometry cook. Preset application and parameter generation are checked separately; real cook failures still stop the operation.
+
+This correction awaits Unity/Houdini testing. It does not change bake behavior or remove genuine error checks.
+
+
 ### Duplicate HDA state — 15 October 2026
 
 - Refresh current parameters; restore multiparm layout before copying named parameter inputs.
