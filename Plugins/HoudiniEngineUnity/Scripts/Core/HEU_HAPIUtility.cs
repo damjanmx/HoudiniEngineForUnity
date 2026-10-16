@@ -344,7 +344,7 @@ namespace HoudiniEngineUnity
             bool bBuildAsync,
             bool bLoadFromMemory = false,
             bool bAlwaysOverwriteOnLoad = false,
-            GameObject rootGO = null)
+            GameObject rootGO = null, int desiredSubassetIndex = -1)
         {
             if (filePath == null || !DoesMappedPathExist(filePath))
             {
@@ -387,7 +387,10 @@ namespace HoudiniEngineUnity
             asset.AlwaysOverwriteOnLoad = bAlwaysOverwriteOnLoad;
 
             // Build it in Houdini Engine
-            asset.RequestReload(bBuildAsync);
+            if (desiredSubassetIndex >= 0)
+                asset.ReloadForDuplication(desiredSubassetIndex);
+            else
+                asset.RequestReload(bBuildAsync);
 
             // Apply Unity transform and possibly upload to Houdini Engine
             rootGO.transform.position = initialPosition;

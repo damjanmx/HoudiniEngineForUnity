@@ -1342,7 +1342,7 @@ namespace HoudiniEngineUnity
         // Helper to copy input values
         internal void CopyInputValuesTo(HEU_SessionBase session, HEU_InputNode destInputNode)
         {
-            destInputNode._pendingInputObjectType = _inputObjectType;
+            destInputNode.ChangeInputType(session, _pendingInputObjectType);
 
             if (GetInternalObjectType(destInputNode._inputObjectType) == InternalObjectType.HDA)
             {
@@ -1362,13 +1362,19 @@ namespace HoudiniEngineUnity
             foreach (HEU_InputHDAInfo srcInputInfo in _inputAssetInfos)
             {
                 HEU_InputHDAInfo newInputInfo = new HEU_InputHDAInfo();
-                srcInputInfo.CopyTo(newInputInfo);
+                // The duplicate must establish its own connection and upstream subscription.
+                newInputInfo._pendingGO = srcInputInfo._pendingGO;
 
                 destInputNode._inputAssetInfos.Add(newInputInfo);
             }
 
             destInputNode._keepWorldTransform = _keepWorldTransform;
             destInputNode._packGeometryBeforeMerging = _packGeometryBeforeMerging;
+            destInputNode._meshSettings = JsonUtility.FromJson<HEU_InputInterfaceMeshSettings>(JsonUtility.ToJson(_meshSettings));
+            destInputNode._tilemapSettings = JsonUtility.FromJson<HEU_InputInterfaceTilemapSettings>(JsonUtility.ToJson(_tilemapSettings));
+            destInputNode._splineSettings = JsonUtility.FromJson<HEU_InputInterfaceSplineSettings>(JsonUtility.ToJson(_splineSettings));
+            destInputNode.RequiresCook = true;
+            destInputNode.RequiresUpload = true;
         }
 
 

@@ -14,6 +14,16 @@ Stage numbers below describe this project's changes; they are not official SideF
 
 ## 1. Cumulative changelog
 
+### Duplicate HDA state — 15 October 2026
+
+- Refresh current parameters; restore multiparm layout before copying named parameter inputs.
+- Recreate input connections and force uploads; copy input interface settings and offsets independently.
+- Preserve instance overrides, omitted generation/curve/bake settings and the bake target list.
+- Reuse the selected HDA subasset, scene and parent; copy root flags and additional root components.
+- Retain existing curve, editable attribute, terrain, material and output component copying.
+- See [DUPLICATE_HDA_README.md](DUPLICATE_HDA_README.md) for usage, shared references and limitations. Unity testing pending.
+
+
 ### Player-build namespace fix — 14 October 2026
 
 - Qualified System.StringSplitOptions in HEU_HoudiniAsset so non-editor compilation does not depend on an editor-only System import.

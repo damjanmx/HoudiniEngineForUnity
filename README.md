@@ -2,6 +2,10 @@
 
 Customizations maintained by Nikola Damjanov, based on SideFX Houdini Engine for Unity **22.0.466**. Development branch: `custom/houdini22.0`. The earlier 22.0.459 baseline is recorded as `baseline/houdini-22.0.459`; the current plugin includes the official 22.0.466 update.
 
+## Duplicate HDA
+
+The inspector **Duplicate** button now restores current parameters, multiparm input layout, input references and offsets, input settings, instance overrides and the custom bake options. The duplicate keeps the source transform and parent, with its own Houdini connections and editable lists. Referenced input objects and bake targets remain shared references. See [Duplicate HDA documentation](Documentation/DUPLICATE_HDA_README.md) for scope and testing.
+
 ## Changes and usage
 
 These attributes control the names and hierarchy of generated Unity GameObjects. Use scalar string attributes in Houdini.

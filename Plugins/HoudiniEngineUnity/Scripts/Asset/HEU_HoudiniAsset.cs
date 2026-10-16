@@ -879,6 +879,13 @@ namespace HoudiniEngineUnity
             return true;
         }
 
+        internal void ReloadForDuplication(int subassetIndex)
+        {
+            ClearBuildRequest();
+            SetCookStatus(AssetCookStatus.PRELOAD, AssetCookResult.NONE);
+            ProcessRebuild(false, subassetIndex);
+        }
+
         /// <inheritdoc />
         public bool RequestResetParameters(bool bAsync = false)
         {
@@ -910,7 +917,8 @@ namespace HoudiniEngineUnity
             if (_assetType == HEU_AssetType.TYPE_HDA)
             {
                 newRootGameObject = HEU_HAPIUtility.InstantiateHDA(_assetPath, _rootGameObject.transform.position, session, bBuildAsync,
-                    bAlwaysOverwriteOnLoad: false, rootGO: newRootGameObject);
+                    bLoadFromMemory: _loadAssetFromMemory, bAlwaysOverwriteOnLoad: false, rootGO: newRootGameObject,
+                    desiredSubassetIndex: _selectedSubassetIndex);
             }
             else if (_assetType == HEU_AssetType.TYPE_CURVE)
             {
@@ -928,8 +936,18 @@ namespace HoudiniEngineUnity
                 return null;
             }
 
+            if (newRootGameObject == null)
+            {
+                HEU_Logger.LogError("Unable to create the duplicate Houdini asset.");
+                return null;
+            }
+
             HEU_HoudiniAssetRoot newRoot = newRootGameObject.GetComponent<HEU_HoudiniAssetRoot>();
             HEU_HoudiniAsset newAsset = newRoot._houdiniAsset;
+
+            if (newRootGameObject.transform.parent == null && _rootGameObject.scene.IsValid()
+                && newRootGameObject.scene != _rootGameObject.scene)
+                UnityEngine.SceneManagement.SceneManager.MoveGameObjectToScene(newRootGameObject, _rootGameObject.scene);
 
             Transform newRootTransform = newRootGameObject.transform;
             newRootTransform.parent = thisParentTransform;
@@ -937,7 +955,31 @@ namespace HoudiniEngineUnity
             newRootTransform.localRotation = _rootGameObject.transform.localRotation;
             newRootTransform.localScale = _rootGameObject.transform.localScale;
 
-            this.CopyPropertiesTo(newAsset);
+            if (!this.CopyPropertiesTo(newAsset))
+            {
+                HEU_Logger.LogError("Duplicate is incomplete. See the preceding cook error.");
+                return newRootGameObject;
+            }
+            newRootGameObject.name = goName;
+            newRootGameObject.layer = _rootGameObject.layer;
+            newRootGameObject.tag = _rootGameObject.tag;
+#if UNITY_EDITOR
+            UnityEditor.GameObjectUtility.SetStaticEditorFlags(newRootGameObject,
+                UnityEditor.GameObjectUtility.GetStaticEditorFlags(_rootGameObject));
+#endif
+            HEU_HoudiniAssetRoot sourceRoot = _rootGameObject.GetComponent<HEU_HoudiniAssetRoot>();
+            if (sourceRoot != null)
+                newRoot._bakeTargets = sourceRoot._bakeTargets != null
+                    ? new List<GameObject>(sourceRoot._bakeTargets) : new List<GameObject>();
+#if UNITY_EDITOR
+            foreach (Component component in _rootGameObject.GetComponents<Component>())
+            {
+                if (component == null || component is Transform || component is HEU_HoudiniAssetRoot) continue;
+                UnityEditorInternal.ComponentUtility.CopyComponent(component);
+                UnityEditorInternal.ComponentUtility.PasteComponentAsNew(newRootGameObject);
+            }
+#endif
+            newRootGameObject.SetActive(_rootGameObject.activeSelf);
 
             // Select it
             HEU_EditorUtility.SelectObject(newRootGameObject);
@@ -5413,60 +5455,27 @@ namespace HoudiniEngineUnity
         }
 
         // Copy all values from this asset to the new asset
-        private void CopyPropertiesTo(HEU_HoudiniAsset newAsset)
+        private bool CopyPropertiesTo(HEU_HoudiniAsset newAsset)
         {
             HEU_SessionBase session = GetAssetSession(true);
 
+            // Capture current inspector edits, including edits made with auto-cook disabled.
+            // Never copy the source's Houdini node IDs or input connections.
+            if (session != null && IsAssetValidInHoudini(session) && _parameters != null)
+            {
+                if (_parameters.HasModifiersPending()
+                    && (!RecookBlocking(true, true, true, false, false, false)
+                        || _lastCookResult != AssetCookResult.SUCCESS))
+                    return false;
+                if (!_parameters.UploadValuesToHoudini(session, this))
+                    return false;
+                _parameters.DownloadPresetData(session);
+            }
+
             // Set parameter preset for asset
             if (newAsset.Parameters != null && _parameters != null)
-                newAsset.Parameters.SetPresetData(_parameters.GetPresetData());
-
-            // Set parameter preset for curves
-            // The curve names for the new asset might be different than that of the old one for reasons
-            // We want to match it if possible, but if not, then just iterate list
-            bool bGetCurveFromNames = true;
-            bGetCurveFromNames &= this._curves.Count == newAsset._curves.Count;
-
-            for (int i = 0; i < newAsset._curves.Count; i++)
-            {
-                bGetCurveFromNames &= this._curves.Find((HEU_Curve curve) => curve.CurveName == newAsset._curves[i].CurveName) != null;
-            }
-
-            if (bGetCurveFromNames)
-            {
-                int numCurves = newAsset._curves.Count;
-                for (int i = 0; i < numCurves; ++i)
-                {
-                    HEU_Curve srcCurve = GetCurve(newAsset._curves[i].CurveName);
-                    if (srcCurve != null)
-                    {
-                        newAsset._curves[i].Parameters.SetPresetData(srcCurve.Parameters.GetPresetData());
-                        newAsset._curves[i].SetCurveNodeData(srcCurve.DuplicateCurveNodeData());
-                    }
-                }
-            }
-            else
-            {
-                int numCurves = Mathf.Min(this._curves.Count, newAsset._curves.Count);
-                for (int i = 0; i < numCurves; i++)
-                {
-                    HEU_Curve srcCurve = this._curves[i];
-                    if (srcCurve != null)
-                    {
-                        newAsset._curves[i].Parameters.SetPresetData(srcCurve.Parameters.GetPresetData());
-                        newAsset._curves[i].SetCurveNodeData(srcCurve.DuplicateCurveNodeData());
-                    }
-                }
-            }
-
-            newAsset._curveEditorEnabled = this._curveEditorEnabled;
-            newAsset._curveDrawCollision = this._curveDrawCollision;
-            newAsset._curveDrawColliders = new List<Collider>(this._curveDrawColliders);
-            newAsset._curveDrawLayerMask = this._curveDrawLayerMask;
-            newAsset._curveDisableScaleRotation = this._curveDisableScaleRotation;
-
-            // Upload parameter preset
-            newAsset.UploadParameterPresetToHoudini(newAsset.GetAssetSession(false));
+                newAsset.Parameters.SetPresetData(_parameters.GetPresetData() != null
+                    ? (byte[])_parameters.GetPresetData().Clone() : null);
 
             this._instanceInputUIState.CopyTo(newAsset._instanceInputUIState);
 
@@ -5495,18 +5504,100 @@ namespace HoudiniEngineUnity
             newAsset._useLODGroups = this._useLODGroups;
             newAsset._alwaysOverwriteOnLoad = this._alwaysOverwriteOnLoad;
 
+            newAsset._uiLocked = this._uiLocked;
+            newAsset._useOutputNodes = this._useOutputNodes;
+            newAsset._splitGeosByGroup = this._splitGeosByGroup;
+            newAsset._sessionSyncAutoCook = this._sessionSyncAutoCook;
+            newAsset._bakeUpdateKeepPreviousTransformValues = this._bakeUpdateKeepPreviousTransformValues;
+            newAsset._bakeUpdateDeleteAllBakedData = this._bakeUpdateDeleteAllBakedData;
+            newAsset._bakeToTheSceneFolder = this._bakeToTheSceneFolder;
+            newAsset._handlesEnabled = this._handlesEnabled;
+            newAsset._curveProjectMaxDistance = this._curveProjectMaxDistance;
+            newAsset._curveProjectDirection = this._curveProjectDirection;
+            newAsset._curveProjectDirectionToView = this._curveProjectDirectionToView;
+            newAsset._curveFrameSelectedNodes = this._curveFrameSelectedNodes;
+            newAsset._curveFrameSelectedNodeDistance = this._curveFrameSelectedNodeDistance;
+
+            // Apply the preset without uploading the destination's default parameter values.
+            // Regenerate multiparm/ramp parameters and their input nodes before matching inputs.
+            if (!newAsset.RecookBlocking(false, true, false, true, false, false)
+                || newAsset._lastCookResult != AssetCookResult.SUCCESS)
+            {
+                HEU_Logger.LogError("Duplicate: unable to restore parameter layout.");
+                return false;
+            }
+
+            // Set parameter preset for curves
+            // The curve names for the new asset might be different than that of the old one for reasons
+            // We want to match it if possible, but if not, then just iterate list
+            bool bGetCurveFromNames = true;
+            bGetCurveFromNames &= this._curves.Count == newAsset._curves.Count;
+
+            for (int i = 0; i < newAsset._curves.Count; i++)
+            {
+                bGetCurveFromNames &= this._curves.Find((HEU_Curve curve) => curve.CurveName == newAsset._curves[i].CurveName) != null;
+            }
+
+            if (bGetCurveFromNames)
+            {
+                int numCurves = newAsset._curves.Count;
+                for (int i = 0; i < numCurves; ++i)
+                {
+                    HEU_Curve srcCurve = GetCurve(newAsset._curves[i].CurveName);
+                    if (srcCurve != null)
+                    {
+                        if (srcCurve.Parameters != null && newAsset._curves[i].Parameters != null)
+                        {
+                            if (session != null && srcCurve.Parameters.UploadValuesToHoudini(session, this))
+                                srcCurve.Parameters.DownloadPresetData(session);
+                            byte[] curvePreset = srcCurve.Parameters.GetPresetData();
+                            newAsset._curves[i].Parameters.SetPresetData(curvePreset != null ? (byte[])curvePreset.Clone() : null);
+                            newAsset._curves[i].SetUploadParameterPreset(true);
+                        }
+                        newAsset._curves[i].SetCurveNodeData(srcCurve.DuplicateCurveNodeData());
+                    }
+                }
+            }
+            else
+            {
+                int numCurves = Mathf.Min(this._curves.Count, newAsset._curves.Count);
+                for (int i = 0; i < numCurves; i++)
+                {
+                    HEU_Curve srcCurve = this._curves[i];
+                    if (srcCurve != null)
+                    {
+                        if (srcCurve.Parameters != null && newAsset._curves[i].Parameters != null)
+                        {
+                            if (session != null && srcCurve.Parameters.UploadValuesToHoudini(session, this))
+                                srcCurve.Parameters.DownloadPresetData(session);
+                            byte[] curvePreset = srcCurve.Parameters.GetPresetData();
+                            newAsset._curves[i].Parameters.SetPresetData(curvePreset != null ? (byte[])curvePreset.Clone() : null);
+                            newAsset._curves[i].SetUploadParameterPreset(true);
+                        }
+                        newAsset._curves[i].SetCurveNodeData(srcCurve.DuplicateCurveNodeData());
+                    }
+                }
+            }
+
+            newAsset._curveEditorEnabled = this._curveEditorEnabled;
+            newAsset._curveDrawCollision = this._curveDrawCollision;
+            newAsset._curveDrawColliders = new List<Collider>(this._curveDrawColliders);
+            newAsset._curveDrawLayerMask = this._curveDrawLayerMask;
+            newAsset._curveDisableScaleRotation = this._curveDisableScaleRotation;
+
             // Copy over tools state
             newAsset._editableNodesToolsEnabled = this._editableNodesToolsEnabled;
-            newAsset._toolsInfo = ScriptableObject.Instantiate(this._toolsInfo) as HEU_ToolsInfo;
+            newAsset._toolsInfo = this._toolsInfo != null
+                ? ScriptableObject.Instantiate(this._toolsInfo) as HEU_ToolsInfo : null;
 
             // Copy events
 
-            newAsset._reloadDataEvent = this._reloadDataEvent;
-            newAsset._cookedDataEvent = this._cookedDataEvent;
-            newAsset._bakedDataEvent = this._bakedDataEvent;
-            newAsset._preAssetEvent = this._preAssetEvent;
+            newAsset._reloadDataEvent = JsonUtility.FromJson<HEU_ReloadDataEvent>(JsonUtility.ToJson(this._reloadDataEvent));
+            newAsset._cookedDataEvent = JsonUtility.FromJson<HEU_CookedDataEvent>(JsonUtility.ToJson(this._cookedDataEvent));
+            newAsset._bakedDataEvent = JsonUtility.FromJson<HEU_BakedDataEvent>(JsonUtility.ToJson(this._bakedDataEvent));
+            newAsset._preAssetEvent = JsonUtility.FromJson<HEU_PreAssetEvent>(JsonUtility.ToJson(this._preAssetEvent));
 
-            newAsset._downstreamConnectionCookedEvent = this._downstreamConnectionCookedEvent;
+            // Downstream subscriptions belong to actual connections, not the copied asset.
 
             // Copy and upload attribute values
             int numAttributeStores = newAsset._attributeStores.Count;
@@ -5527,13 +5618,17 @@ namespace HoudiniEngineUnity
             {
                 HEU_InputNode newInputNode = newAsset._inputNodes[i];
 
-                HEU_InputNode srcInputNode = GetInputNodeByIndex(i);
+                HEU_InputNode srcInputNode = _inputNodes.Find(input => input != null
+                    && input.InputType == newInputNode.InputType
+                    && (newInputNode.InputType == HEU_InputNode.InputNodeType.PARAMETER
+                        ? input.ParamName == newInputNode.ParamName
+                        : input.InputName == newInputNode.InputName));
                 if (srcInputNode != null)
                 {
                     srcInputNode.CopyInputValuesTo(session, newInputNode);
 
-                    newInputNode.RequiresCook = srcInputNode.RequiresCook;
-                    newInputNode.RequiresUpload = srcInputNode.RequiresUpload;
+                    newInputNode.RequiresCook = true;
+                    newInputNode.RequiresUpload = true;
                 }
             }
 
@@ -5568,7 +5663,59 @@ namespace HoudiniEngineUnity
                 newAsset.SetCookStatus(AssetCookStatus.NONE, AssetCookResult.SUCCESS);
             }
 
-            newAsset.RequestCook(false, false, false, false);
+            if (!newAsset.RecookBlocking(false, true, false, false, true, false)
+                || newAsset._lastCookResult != AssetCookResult.SUCCESS)
+            {
+                HEU_Logger.LogError("Duplicate: unable to cook copied inputs.");
+                return false;
+            }
+
+            // Instance overrides are Unity-side data, not part of the HAPI parameter preset.
+            bool copiedInstances = false;
+            foreach (HEU_ObjectNode sourceObject in _objectNodes)
+            {
+                HEU_ObjectNode targetObject = newAsset.GetObjectNodeByName(sourceObject.ObjectName);
+                if (targetObject == null) continue;
+                foreach (HEU_GeoNode sourceGeo in sourceObject.GeoNodes)
+                {
+                    HEU_GeoNode targetGeo = targetObject.GetGeoNode(sourceGeo.GeoName);
+                    if (targetGeo == null) continue;
+                    foreach (HEU_PartData sourcePart in sourceGeo.GetParts())
+                    {
+                        HEU_PartData targetPart = targetGeo.GetParts().Find(part => part.PartID == sourcePart.PartID);
+                        if (targetPart == null || sourcePart.ObjectInstanceInfos == null) continue;
+                        foreach (HEU_ObjectInstanceInfo sourceInfo in sourcePart.ObjectInstanceInfos)
+                        {
+                            HEU_ObjectInstanceInfo targetInfo = null;
+                            if (!string.IsNullOrEmpty(sourceInfo._instancedObjectPath))
+                                targetInfo = targetPart.GetObjectInstanceInfoWithObjectPath(sourceInfo._instancedObjectPath);
+                            else
+                            {
+                                HEU_ObjectNode sourceInstancedObject = GetObjectWithID(sourceInfo._instancedObjectNodeID);
+                                HEU_ObjectNode targetInstancedObject = sourceInstancedObject != null
+                                    ? newAsset.GetObjectNodeByName(sourceInstancedObject.ObjectName) : null;
+                                if (targetInstancedObject != null)
+                                    targetInfo = targetPart.GetObjectInstanceInfoWithObjectID(targetInstancedObject.ObjectID);
+                            }
+                            if (targetInfo == null) continue;
+                            targetInfo._instancedInputs.Clear();
+                            foreach (HEU_InstancedInput input in sourceInfo._instancedInputs)
+                                targetInfo._instancedInputs.Add(new HEU_InstancedInput {
+                                    _instancedGameObject = input._instancedGameObject,
+                                    _rotationOffset = input._rotationOffset,
+                                    _scaleOffset = input._scaleOffset
+                                });
+                            copiedInstances |= sourceInfo._instancedInputs.Count > 0;
+                        }
+                    }
+                }
+            }
+            if (copiedInstances && (!newAsset.RecookBlocking(false, true, false, false, false, false)
+                || newAsset._lastCookResult != AssetCookResult.SUCCESS))
+            {
+                HEU_Logger.LogError("Duplicate: unable to cook instance overrides.");
+                return false;
+            }
 
             // For outputs, copy over material overrides, and custom (non-generated) components
 
@@ -5617,6 +5764,7 @@ namespace HoudiniEngineUnity
                     }
                 }
             }
+            return true;
         }
 
 

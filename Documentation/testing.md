@@ -396,3 +396,21 @@ Verification: allow editor compilation to finish, then repeat the player build t
 ## Player-build namespace regression
 
 Repeat the player build after qualifying System.StringSplitOptions in HEU_HoudiniAsset. Verify CS0103 and the preceding Codice CS0246 are absent. Actual Unity build verification remains pending.
+
+
+## Duplicate HDA regression — 15 October 2026
+
+Status: not yet verified in Unity. Use the inspector Duplicate button.
+
+1. Baseline: change several float, integer, toggle and string parameters; duplicate and compare values, output, transform, parent and scene. Repeat with auto-cook off and a committed value not yet cooked. Change the duplicate and verify the source settings stay unchanged.
+2. Multiparms/ramps: use multiple lists, non-default counts, empty entries and edited ramps. Assign distinct objects per input entry. Duplicate; verify counts, values, input ownership/order and generated geometry. Repeat after adding/removing entries.
+3. Input Nodes: assign multiple objects, including an empty slot, with non-default offsets, packing and world-transform options. Check duplicates work immediately, after recook and after scene save/reopen. Test a connected HDA/curve input and confirm it cooks independently after changing the upstream HDA.
+4. Input settings: change Export Colliders, tilemap options and spline sampling resolution. Duplicate, compare settings, then edit only the duplicate and confirm the original settings do not change.
+5. Instance Inputs: set multiple overrides with rotation/scale offsets. Duplicate and compare lists and generated instances. Repeat with no overrides: the list must remain empty. Change the duplicate's list and verify the source list is unchanged.
+6. Bake options: set every bake toggle to non-default values and add several bake targets. Duplicate and compare all toggles/targets. Remove a target only from the duplicate; the source list must remain intact. Both initially refer to the same prefab assets.
+7. Curves/editable/terrain: edit curve points and curve settings, paint editable attributes, change terrain settings and material overrides; duplicate and compare. Recook both independently.
+8. Root/options: verify tag, layer, static flags, root components, generation/cooking/handle settings, serialized event listeners and foldouts. Changing the duplicate's event list must not change the source's list. Verify source connection callbacks are not spuriously copied.
+9. Multiple definitions/scenes: duplicate a non-first definition in a multi-definition HDA library; it must retain that definition without prompting. Duplicate an unparented HDA in a loaded non-active scene and verify scene placement.
+10. Regression: cook a fresh HDA, bake a prefab, update a Project prefab and build a player. Confirm the previous namespace fixes remain and the earlier feature tests still pass.
+
+Compare configured state and deterministic outputs, not session node IDs or cache paths. Runtime state, arbitrary extra children and remapping references in custom components are outside this feature's scope.

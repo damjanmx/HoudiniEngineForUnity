@@ -22,3 +22,5 @@ For the custom Houdini Engine for Unity fork based on 22.0.466.
 - [TESTING.md](TESTING.md)
 
 - [UNITY_ASSET_NAME_SUFFIX_README.md](UNITY_ASSET_NAME_SUFFIX_README.md)
+
+- [DUPLICATE_HDA_README.md](DUPLICATE_HDA_README.md)
